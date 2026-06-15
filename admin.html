@@ -1055,6 +1055,8 @@
                 if (data && data.error === "Unauthorized") {
                     if (!isSilent) alert('验证码校验失败，未授权的访问！');
                     localStorage.removeItem('admin_passcode');
+                } else if (data && data.error === "ServerError") {
+                    if (!isSilent) alert('Google 脚本执行错误：\n' + data.message + '\n\n如果是【配置错误】，请双击打开表格的关联菜单或在 Apps Script 中使用 openById 绑定特定表格。');
                 } else if (Array.isArray(data)) {
                     // 登录成功
                     localStorage.setItem('admin_passcode', passcode);
