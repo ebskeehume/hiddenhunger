@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>隐性饥饿健康状态评估问卷</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
 
@@ -737,6 +738,95 @@
             from { opacity: 0; transform: translateY(4px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* 详细报告与PDF样式 */
+        .pdf-report-content {
+            background: #ffffff;
+            color: #1e293b;
+        }
+        .results-detail-section {
+            border-top: 2px solid var(--border-color);
+            padding-top: 30px;
+            margin-top: 30px;
+        }
+        .detail-card {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            page-break-inside: avoid;
+            transition: var(--transition);
+        }
+        .detail-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: #cbd5e1;
+        }
+        .detail-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .detail-q-title {
+            font-weight: 600;
+            color: #0f172a;
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .detail-q-badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .detail-q-badge.safe {
+            background-color: #ecfdf5;
+            color: #10b981;
+            border: 1px solid #a7f3d0;
+        }
+        .detail-q-badge.warn-1 {
+            background-color: #fffbeb;
+            color: #d97706;
+            border: 1px solid #fde68a;
+        }
+        .detail-q-badge.warn-3 {
+            background-color: #fff7ed;
+            color: #f97316;
+            border: 1px solid #ffedd5;
+        }
+        .detail-q-badge.danger {
+            background-color: #fef2f2;
+            color: #ef4444;
+            border: 1px solid #fee2e2;
+        }
+        .detail-answer-row {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            background: #ffffff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid #cbd5e1;
+        }
+        .detail-advice-row {
+            font-size: 0.88rem;
+            background: #fdfaf6;
+            border: 1px solid #faebd7;
+            color: #7c2d12;
+            padding: 12px;
+            border-radius: 8px;
+            line-height: 1.5;
+        }
+        .detail-advice-row.success {
+            background: #f0fdf4;
+            border: 1px solid #dcfce7;
+            color: #166534;
+        }
     </style>
 </head>
 <body>
@@ -900,62 +990,95 @@
                 <span class="banner-text">网络通信失败，未能上传到后台。本地报告不受影响。</span>
             </div>
 
-            <div class="results-layout">
-                <!-- 左侧仪表盘 -->
-                <div class="results-left">
-                    <div class="user-meta-badge">
-                        <span id="res-name" style="color: var(--primary-dark)">***</span> 同志，您的体型报告：
+            <!-- 被导出为 PDF 报告的容器包 -->
+            <div id="pdf-report-content" style="background:#ffffff; border-radius:12px; padding:10px;">
+                <!-- PDF 专属页眉（平时在网页端隐藏，仅导出为 PDF 时显现） -->
+                <div class="pdf-only-header" style="display:none; border-bottom: 2px solid var(--primary); padding-bottom:15px; margin-bottom:25px; text-align:center;">
+                    <h2 style="color:var(--primary); margin:0; font-family:'Outfit', sans-serif;">隐性饥饿健康状态评估报告</h2>
+                    <p style="font-size:0.85rem; color:var(--text-secondary); margin:5px 0 0 0;">专业营养评估顾问引流服务系统</p>
+                </div>
+
+                <div class="results-layout">
+                    <!-- 左侧仪表盘 -->
+                    <div class="results-left">
+                        <div class="user-meta-badge">
+                            <span id="res-name" style="color: var(--primary-dark)">***</span> 的生理状况画像：
+                        </div>
+
+                        <!-- 动态环形进度条 -->
+                        <div class="score-circle-wrapper">
+                            <svg class="progress-ring" width="170" height="170">
+                                <circle stroke="#e2e8f0" stroke-width="10" fill="transparent" r="76" cx="85" cy="85" />
+                                <circle class="progress-ring__circle" stroke="var(--primary)" stroke-width="10" fill="transparent" r="76" cx="85" cy="85" stroke-linecap="round" />
+                            </svg>
+                            <div class="score-text-overlay">
+                                <div class="score-number" id="res-score">0</div>
+                                <div class="score-total">/ 100 分</div>
+                                <div class="score-label">隐性饥饿指数</div>
+                            </div>
+                        </div>
+
+                        <!-- 用户的 BMI 表盘 -->
+                        <div class="user-bmi-section">
+                            <div class="bmi-gauge-labels" style="padding: 0;">
+                                <span>偏瘦</span>
+                                <span>正常</span>
+                                <span>超重</span>
+                                <span>肥胖</span>
+                            </div>
+                            <div class="bmi-gauge-bar" style="height: 8px;">
+                                <div class="bar-segment underweight"></div>
+                                <div class="bar-segment normal"></div>
+                                <div class="bar-segment overweight"></div>
+                                <div class="bar-segment obese"></div>
+                                <div class="bmi-pointer" id="res-bmi-pointer"></div>
+                            </div>
+                            <div style="font-size: 0.88rem; font-weight:600; text-align:center;">
+                                您的 BMI 是: <strong id="res-bmi" style="color: var(--primary-dark)">--</strong> 
+                                (<span id="res-bmi-status">--</span>)
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- 动态环形进度条 -->
-                    <div class="score-circle-wrapper">
-                        <svg class="progress-ring" width="170" height="170">
-                            <circle stroke="#e2e8f0" stroke-width="10" fill="transparent" r="76" cx="85" cy="85" />
-                            <circle class="progress-ring__circle" stroke="var(--primary)" stroke-width="10" fill="transparent" r="76" cx="85" cy="85" stroke-linecap="round" />
-                        </svg>
-                        <div class="score-text-overlay">
-                            <div class="score-number" id="res-score">0</div>
-                            <div class="score-total">/ 100 分</div>
-                            <div class="score-label">隐性饥饿指数</div>
-                        </div>
-                    </div>
-
-                    <!-- 用户的 BMI 表盘 -->
-                    <div class="user-bmi-section">
-                        <div class="bmi-gauge-labels" style="padding: 0;">
-                            <span>偏瘦</span>
-                            <span>正常</span>
-                            <span>超重</span>
-                            <span>肥胖</span>
-                        </div>
-                        <div class="bmi-gauge-bar" style="height: 8px;">
-                            <div class="bar-segment underweight"></div>
-                            <div class="bar-segment normal"></div>
-                            <div class="bar-segment overweight"></div>
-                            <div class="bar-segment obese"></div>
-                            <div class="bmi-pointer" id="res-bmi-pointer"></div>
-                        </div>
-                        <div style="font-size: 0.88rem; font-weight:600; text-align:center;">
-                            您的 BMI 是: <strong id="res-bmi" style="color: var(--primary-dark)">--</strong> 
-                            (<span id="res-bmi-status">--</span>)
+                    <!-- 右侧详细诊断建议 -->
+                    <div class="results-right">
+                        <div class="advice-card" id="res-advice-box">
+                            <div class="advice-header">
+                                <h3 class="status-title" id="res-level">--</h3>
+                            </div>
+                            <div id="res-advice">
+                                <!-- 动态加载的针对性建议列表 -->
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 右侧详细诊断建议 -->
-                <div class="results-right">
-                    <div class="advice-card" id="res-advice-box">
-                        <div class="advice-header">
-                            <h3 class="status-title" id="res-level">--</h3>
-                        </div>
-                        <div id="res-advice">
-                            <!-- 动态加载的针对性建议列表 -->
-                        </div>
+                <!-- 新增：详细生理评估画像与答卷报告明细 -->
+                <div class="results-detail-section" style="margin-top: 35px; text-align:left; border-top: 1px solid var(--border-color); padding-top:25px;">
+                    <h3 style="border-left:5px solid var(--primary); padding-left:12px; margin:0 0 20px 0; color:#0f172a; font-size:1.25rem;">📊 答卷详情与深度健康指标解析</h3>
+                    
+                    <!-- 客户基础体征概览 -->
+                    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; background:#f8fafc; padding:15px; border-radius:8px; margin-bottom:20px; border:1px solid var(--border-color); font-size:0.9rem;">
+                        <div><strong>姓名：</strong><span id="pdf-name" style="font-weight:600;">--</span></div>
+                        <div><strong>性别：</strong><span id="pdf-gender" style="font-weight:600;">--</span></div>
+                        <div><strong>电话：</strong><span id="pdf-phone" style="font-weight:600;">--</span></div>
+                        <div><strong>身高：</strong><span id="pdf-height" style="font-weight:600;">--</span> cm</div>
+                        <div><strong>体重：</strong><span id="pdf-weight" style="font-weight:600;">--</span> kg</div>
+                        <div><strong>体型指数 BMI：</strong><span id="pdf-bmi" style="font-weight:600;">--</span></div>
+                    </div>
+
+                    <!-- 20 项题目详细评估情况 -->
+                    <div id="pdf-analysis-list">
+                        <!-- 动态生成的题目诊断列表 -->
                     </div>
                 </div>
             </div>
 
-            <button type="button" class="btn btn-secondary" onclick="location.reload()" style="width: 100%; max-width: 250px;">重新测评</button>
+            <!-- 操作按钮 -->
+            <div class="button-group" style="margin-top: 30px; display:flex; gap:15px;">
+                <button type="button" class="btn btn-secondary" onclick="location.reload()" style="flex:1;">重新测评</button>
+                <button type="button" class="btn btn-primary" onclick="downloadLocalPDF()" style="flex:1; background-color:var(--accent);">💾 保存 PDF 报告</button>
+            </div>
         </div>
     </form>
 </div>
@@ -972,7 +1095,36 @@
     // ----------------------------------------------------
     // 配置：请在此处填入您在 Google Apps Script 中获取的真实 Web 应用 URL
     // ----------------------------------------------------
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyC0ounQTbOW0wo03b1A3R6nTS4gLXJ8hLm7Uq6sSma_229J99OtZIbERyBoZsvy95S/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyNCJGSvGfHgz8oumB-YmKAx4gof71RJYiecK1izjlx2TYEAYzP4Ar4MKM2CDnLV3Yw/exec';
+
+    // 1. 从 URL 中解析 ABO 推广人编号和邮箱参数 (有就记录，没有则留空)
+    const urlParams = new URLSearchParams(window.location.search);
+    const abo = urlParams.get('abo') || '';
+    const aboEmail = urlParams.get('email') || '';
+
+    // 专业针对性营养调理科普建议库 (温和营养科普为主)
+    const questionAnalysis = [
+        { qName: "新鲜蔬菜摄入量", lowIntakeAdvice: "⚠️ 蔬菜摄入偏少。深绿、红色蔬菜富含抗氧化维生素 A、C、叶酸和膳食纤维。长期匮乏易影响细胞抗氧化、肠道蠕动及微循环血管弹性。建议适当补充植物抗氧化营养素。" },
+        { qName: "新鲜水果摄入频次", lowIntakeAdvice: "⚠️ 水果摄入不足。水果是水溶性维生素（尤其是维生素 C）和活性植物多酚的重要来源，缺乏会降低免疫机能，减缓皮下胶原蛋白合成。建议加强维生素 C 及类黄酮补充。" },
+        { qName: "主食粗细粮食搭配", lowIntakeAdvice: "⚠️ 谷物过于精细。全谷物含有极丰富的 B 族维生素（B1, B2, B6）及膳食纤维，缺乏可能导致糖类及能量代谢减慢、神经易疲劳及肠道益生菌群失调。建议温和补充复合 B 族。" },
+        { qName: "加工食品与泡面频次", lowIntakeAdvice: "⚠️ 加工食品频次偏高。此类食物含大量钠、饱和脂肪，且微量元素极少。高钠摄入会加速身体钙质流流失，加重体内电解质失衡及代谢器官负荷。建议额外加强天然抗氧化剂与钙质保护。" },
+        { qName: "高油盐外餐频次", lowIntakeAdvice: "⚠️ 外餐油盐过重。高温烹饪会破坏食物中的脂溶性维生素（A、E），且易产生多余自由基，增加机体的氧化应激与肝脏代谢压力。建议补充抗氧化维生素 E 与类胡萝卜素。" },
+        { qName: "奶豆类食品摄入量", lowIntakeAdvice: "⚠️ 奶豆类消费不足。钙质和优质蛋白的日常来源偏低，极易引发钙负平衡，增加中老年骨质流失风险。建议加强优质植物蛋白质与天然钙镁片补充。" },
+        { qName: "偏食挑食习惯程度", lowIntakeAdvice: "⚠️ 偏食习惯明显。偏食会导致日常微量元素的广度大幅缩水，使某几种特定的维生素或矿物质处于长期慢性赤字状态，建议每日补充多维营养素以垫高基础防线。" },
+        { qName: "海产品与富锌碘食物", lowIntakeAdvice: "⚠️ 缺锌与缺碘风险。海鱼海带是人体免疫微量元素（锌、硒、碘）和 Omega-3 多不饱和脂肪酸的黄金来源，匮乏会导致免疫力脆弱及甲状腺素代谢不佳。建议温和补充深海鱼油及锌元素。" },
+        { qName: "莫名疲劳与精力状况", lowIntakeAdvice: "💡 提示缺乏：B 族维生素（B1、B6、B12）、铁元素、辅酶 Q10。微量元素赤字会导致细胞内的线粒体能量转换效率低下，引起神经性慢性疲劳。建议适当调理 B 族与红肉补充。" },
+        { qName: "身体免疫力状况", lowIntakeAdvice: "💡 提示缺乏：维生素 C、维生素 D3、免疫锌。这些微量元素是粘膜物理屏障防御和白细胞激活所不可或缺的‘催化剂’，易感冒者应特别关注维生素 C 与 D3 复合制剂。" },
+        { qName: "口腔溃疡/嘴角发炎/牙龈出血", lowIntakeAdvice: "💡 提示缺乏：维生素 B2（核黄素）、维生素 C、铁。粘膜修复高度依赖 B 族，牙龈结缔组织合成需要 VC 支持。频繁发作者说明体内的 B2 和 VC 处于警戒线之下。" },
+        { qName: "眼睛干涩/夜间视力下降", lowIntakeAdvice: "💡 提示缺乏：维生素 A、叶黄素、Omega-3 鱼油。维生素 A 构成眼球视网膜感光物质；缺乏会导致泪腺分泌异常，引发视力模糊和干眼，建议补充天然类胡萝卜素及叶黄素。" },
+        { qName: "皮肤干燥/指甲脆弱有白点", lowIntakeAdvice: "💡 提示缺乏：必需矿物锌、维生素 A、B7（生物素）。指甲白点是机体缺锌的典型映射；皮肤干裂多由皮脂腺代谢缺乏维 A 及必需多不饱和脂肪酸引起，建议补充矿物质多维。" },
+        { qName: "近期脱发与掉发频次", lowIntakeAdvice: "💡 提示缺乏：铁、锌、生物素（B7）、蛋白质。毛囊细胞分裂活跃，对铁（血氧输送）和锌（角蛋白合成）极度敏感，严重缺乏会导致毛囊萎缩，应加强复合矿物质和优质蛋白的补充。" },
+        { qName: "脑力记忆与专注力状况", lowIntakeAdvice: "💡 提示缺乏：卵磷脂、维生素 B12、铁、Omega-3。大脑神经递质合成依赖 B 族和必需脂肪酸，缺铁会导致脑部血氧不足，引发注意力涣散和记性变差。建议适当补充卵磷脂及鱼油。" },
+        { qName: "情绪易焦躁不安低落", lowIntakeAdvice: "💡 提示缺乏：钙、镁、维生素 D3。钙与镁协同调节人体神经与肌肉的兴奋度，缺钙镁会导致神经敏感亢奋、易怒烦躁；D3 则与脑部调节情绪的血清素水平高度正相关。" },
+        { qName: "贫血与蹲下站起眩晕", lowIntakeAdvice: "💡 提示缺乏：铁、叶酸、维生素 B12。铁是血红蛋白的核心，叶酸和 B12 是红细胞分裂成熟的必需元素，缺乏会引发红细胞携氧能力溃缩，建议重点补充铁元素与叶酸补给。" },
+        { qName: "伤口愈合与恢复速度", lowIntakeAdvice: "💡 提示缺乏：维生素 C、锌、优质胶原蛋白。胶原纤维网的合成高度依赖 VC 与锌的协同促进，愈合异常缓慢提示组织细胞的自我修复重塑力存在缺口。" },
+        { qName: "肌肉半夜抽筋与骨痛", lowIntakeAdvice: "💡 提示缺乏：钙、镁、维生素 D3。电解质失衡（钙镁缺乏）会导致人体运动终板的神经肌肉异常放电，从而引起夜间剧烈抽筋与腰酸骨痛。建议每日足量补充钙镁片及维生素 D。" },
+        { qName: "特殊消耗与高压状态", lowIntakeAdvice: "💡 提示缺乏：在生理期/重压状态下，身体处于高皮质醇激素水平，对 B 族、叶酸、钙、铁等的需求呈数倍递增，若膳食没有额外加强补充，会极快透支体内储备。" }
+    ];
 
     // 问卷题目数据库：0分代表优良，分数越高越危险
     const questions = [
@@ -1309,9 +1461,11 @@
 
     // 核心提交与云端计算逻辑
     function executeDataUpload() {
-        // 打开全局遮罩
+        // 打开全局遮罩并显示提示文字
         const overlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
         overlay.classList.add('active');
+        loadingText.innerText = "正在为您生成专属 PDF 健康评估报告，请稍候...";
         
         // 抓取并组装数据
         const name = document.getElementById('name').value.trim();
@@ -1340,6 +1494,16 @@
         
         const levelData = adviceLevels[levelKey];
         
+        // 在后台渲染好报告的 DOM，为生成 PDF 准备
+        populateResultsDOM(name, gender, phone, height, weight, bmi, totalScore, levelKey);
+        
+        // 切换到结果页面
+        goToStep(4);
+        
+        // 显示 PDF 专属页眉
+        const pdfHeader = document.querySelector('.pdf-only-header');
+        if (pdfHeader) pdfHeader.style.display = 'block';
+        
         // 组装表单数据
         const requestData = new URLSearchParams();
         requestData.append('name', name);
@@ -1350,12 +1514,55 @@
         requestData.append('bmi', bmi);
         requestData.append('score', totalScore);
         requestData.append('level', levelData.title);
+        requestData.append('abo', abo);
+        requestData.append('aboEmail', aboEmail);
         
         for (let i = 0; i < 20; i++) {
             requestData.append(`q${i}`, answers[`q${i}`]);
         }
         
-        // 逻辑性异步发送
+        // 判断是否需要上传 PDF 到后端 (当配置了 scriptURL 并且有引流人邮箱时)
+        const needPdfUpload = scriptURL && scriptURL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' && scriptURL.trim() !== '' && aboEmail && aboEmail.trim() !== '';
+        
+        if (needPdfUpload) {
+            const opt = {
+                margin:       10,
+                filename:     '隐性饥饿健康评估报告_' + name + '.pdf',
+                image:        { type: 'jpeg', quality: 0.95 },
+                html2canvas:  { scale: 1.5, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            // 使用 html2pdf 生成 PDF base64
+            html2pdf().from(document.getElementById('pdf-report-content')).set(opt).outputPdf('datauristring')
+            .then(function(pdfBase64Uri) {
+                // 还原 PDF 页眉在网页端的隐藏状态
+                if (pdfHeader) pdfHeader.style.display = 'none';
+                
+                const base64Str = pdfBase64Uri.split(',')[1];
+                requestData.append('pdfBase64', base64Str);
+                
+                loadingText.innerText = "报告生成成功，正在同步数据并发送邮件...";
+                sendDataToServer(requestData, name, bmi, totalScore, levelKey);
+            })
+            .catch(function(err) {
+                console.error('PDF 生成失败:', err);
+                if (pdfHeader) pdfHeader.style.display = 'none';
+                loadingText.innerText = "PDF 生成失败，正在同步纯文本数据...";
+                sendDataToServer(requestData, name, bmi, totalScore, levelKey);
+            });
+        } else {
+            // 不需要上传 PDF，直接发送纯文本表单
+            if (pdfHeader) pdfHeader.style.display = 'none';
+            loadingText.innerText = "正在同步评估数据...";
+            sendDataToServer(requestData, name, bmi, totalScore, levelKey);
+        }
+    }
+
+    // 将数据异步提交至 Google Sheets 后端
+    function sendDataToServer(requestData, name, bmi, totalScore, levelKey) {
+        const overlay = document.getElementById('loading-overlay');
+        
         if (scriptURL && scriptURL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' && scriptURL.trim() !== '') {
             fetch(scriptURL, {
                 method: 'POST',
@@ -1430,6 +1637,97 @@
         
         // 渲染环形分数动效
         triggerScoreAnimate(score, diagnostic.color);
+    }
+
+    // 动态在 DOM 中填充详细的 20 道题评估解析
+    function populateResultsDOM(name, gender, phone, height, weight, bmi, score, levelKey) {
+        // 填充基本信息画像
+        document.getElementById('pdf-name').innerText = name;
+        document.getElementById('pdf-gender').innerText = gender;
+        document.getElementById('pdf-phone').innerText = phone || '未填写';
+        document.getElementById('pdf-height').innerText = height;
+        document.getElementById('pdf-weight').innerText = weight;
+        document.getElementById('pdf-bmi').innerText = bmi;
+        
+        // 填充 20 项评估扣分解析
+        const analysisContainer = document.getElementById('pdf-analysis-list');
+        let html = '';
+        
+        for (let i = 0; i < 20; i++) {
+            const checkedOption = document.querySelector(`input[name="q${i}"]:checked`);
+            const val = checkedOption ? parseInt(checkedOption.value) : 0;
+            const selectedOption = questions[i].options.find(opt => opt.v === val);
+            const answerText = selectedOption ? selectedOption.t : '';
+            
+            let badgeClass = 'safe';
+            let badgeText = '优秀 (扣0分)';
+            if (val === 1) {
+                badgeClass = 'warn-1';
+                badgeText = '一般 (扣1分)';
+            } else if (val === 3) {
+                badgeClass = 'warn-3';
+                badgeText = '欠佳 (扣3分)';
+            } else if (val === 5) {
+                badgeClass = 'danger';
+                badgeText = '极差 (扣5分)';
+            }
+            
+            let adviceHtml = '';
+            if (val > 0) {
+                adviceHtml = `<div class="detail-advice-row">${questionAnalysis[i].lowIntakeAdvice}</div>`;
+            } else {
+                adviceHtml = `<div class="detail-advice-row success">✓ 您的习惯/状态非常理想，请继续保持良好的膳食与生活习惯。</div>`;
+            }
+            
+            html += `
+                <div class="detail-card">
+                    <div class="detail-card-header">
+                        <p class="detail-q-title">${questions[i].q}</p>
+                        <span class="detail-q-badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                    <div class="detail-answer-row">
+                        您的选择：<strong>${answerText}</strong>
+                    </div>
+                    ${adviceHtml}
+                </div>
+            `;
+        }
+        
+        analysisContainer.innerHTML = html;
+    }
+
+    // 允许用户本地手动保存一份 PDF 报告
+    function downloadLocalPDF() {
+        const name = document.getElementById('name').value.trim() || '客户';
+        const pdfHeader = document.querySelector('.pdf-only-header');
+        if (pdfHeader) pdfHeader.style.display = 'block';
+        
+        const opt = {
+            margin:       10,
+            filename:     '隐性饥饿健康评估报告_' + name + '.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        
+        const saveBtn = document.querySelector('button[onclick="downloadLocalPDF()"]');
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = "⏳ 正在生成...";
+        saveBtn.disabled = true;
+        
+        html2pdf().from(document.getElementById('pdf-report-content')).set(opt).save()
+        .then(() => {
+            if (pdfHeader) pdfHeader.style.display = 'none';
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        })
+        .catch(err => {
+            console.error('保存 PDF 失败:', err);
+            if (pdfHeader) pdfHeader.style.display = 'none';
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+            alert('PDF 生成失败，请重试！');
+        });
     }
 
     // 绘制环形分数与数字递增特效
