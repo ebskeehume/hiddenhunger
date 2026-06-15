@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隐性饥饿评估管理系统 - 安利 ABO 专属后台</title>
+    <!-- 引入 Chart.js 用于制作精美报表 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary: #2a7a5c;
+            --primary-light: #eef7f4;
+            --primary-dark: #1b523d;
+            --accent: #e88d48;
+            --accent-light: #fef4ec;
+            --bg-color: #f8fafc;
+            --sidebar-bg: #0f172a;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* 登录口令遮罩墙 */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: #ffffff;
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
+            text-align: center;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-card h2 {
+            margin-top: 0;
+            color: #0f172a;
+            font-size: 1.6rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .login-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #0f172a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 1.1rem;
+            outline: none;
+            text-align: center;
+            letter-spacing: 8px;
+            transition: var(--transition);
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(42, 122, 92, 0.15);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .login-btn:hover {
+            background-color: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(42, 122, 92, 0.2);
+        }
+
+        /* 页面主体布局 */
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: #ffffff;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 40px;
+            padding-left: 8px;
+        }
+
+        .logo-icon {
+            background-color: var(--primary);
+            color: #ffffff;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.1rem;
+            line-height: 1.2;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text span {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #94a3b8;
+            transition: var(--transition);
+            gap: 12px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-item.active {
+            background-color: var(--primary);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 5px;
+        }
+
+        .logout-btn:hover {
+            color: #ef4444;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            flex-grow: 1;
+            padding: 40px;
+            overflow-y: auto;
+            max-width: 1400px;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .content-title h1 {
+            font-size: 1.8rem;
+            margin: 0 0 5px 0;
+            color: #0f172a;
+        }
+
+        .content-title p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .refresh-btn {
+            padding: 10px 18px;
+            background-color: #ffffff;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+
+        .refresh-btn:hover {
+            background-color: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        /* KPI 指标卡片 */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .kpi-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .kpi-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .kpi-icon.blue { background-color: #eff6ff; color: #3b82f6; }
+        .kpi-icon.green { background-color: #f0fdf4; color: #10b981; }
+        .kpi-icon.orange { background-color: #fff7ed; color: #f97316; }
+        .kpi-icon.purple { background-color: #faf5ff; color: #a855f7; }
+
+        .kpi-details h3 {
+            margin: 0 0 4px 0;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-details .kpi-value {
+            font-size: 1.8rem;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1;
+            margin: 0;
+        }
+
+        /* 仪表盘图表与机会区 */
+        .dashboard-row {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        /* 纽崔莱推荐机会列表 */
+        .opp-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .opp-item {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .opp-info {
+            flex-grow: 1;
+        }
+
+        .opp-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .opp-desc {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .opp-bar-container {
+            width: 120px;
+            flex-shrink: 0;
+            text-align: right;
+        }
+
+        .opp-pct {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .opp-bar {
+            height: 6px;
+            background-color: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .opp-bar-fill {
+            height: 100%;
+            background-color: var(--primary);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.8s ease-in-out;
+        }
+
+        /* 数据过滤与搜索区 */
+        .filter-section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+            flex-grow: 1;
+            min-width: 200px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px 10px 36px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(42, 122, 92, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        .filter-select {
+            padding: 10px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            background-color: #ffffff;
+            outline: none;
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        /* 客户列表表格 */
+        .table-container {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 25px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        thead {
+            background-color: #f8fafc;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            padding: 16px 20px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+            transition: var(--transition);
+        }
+
+        tbody tr:hover {
+            background-color: #fafbfb;
+        }
+
+        td {
+            padding: 16px 20px;
+            color: var(--text-primary);
+        }
+
+        /* 状态徽章 */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge.good { background-color: #ecfdf5; color: #065f46; }
+        .badge.mild { background-color: #fffbeb; color: #92400e; }
+        .badge.moderate { background-color: #fff7ed; color: #c2410c; }
+        .badge.severe { background-color: #fef2f2; color: #b91c1c; }
+
+        /* 操作按钮 */
+        .action-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .action-btn.details {
+            background-color: #f1f5f9;
+            color: #334155;
+        }
+
+        .action-btn.details:hover {
+            background-color: #e2e8f0;
+        }
+
+        .action-btn.whatsapp {
+            background-color: #25d366;
+            color: #ffffff;
+        }
+
+        .action-btn.whatsapp:hover {
+            background-color: #20ba5a;
+            box-shadow: 0 3px 6px rgba(37, 211, 102, 0.2);
+        }
+
+        .action-btn.whatsapp.disabled {
+            background-color: #e2e8f0;
+            color: #94a3b8;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* 侧边滑出抽屉 (Detail Drawer) */
+        .drawer-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 900;
+            display: none;
+        }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            right: -500px;
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
+            background-color: #ffffff;
+            box-shadow: -10px 0 25px rgba(0,0,0,0.1);
+            z-index: 1000;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .drawer.active {
+            right: 0;
+        }
+
+        .drawer-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f8fafc;
+        }
+
+        .drawer-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .drawer-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .drawer-close:hover {
+            color: #0f172a;
+        }
+
+        .drawer-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .drawer-section {
+            margin-bottom: 25px;
+        }
+
+        .drawer-section h4 {
+            margin: 0 0 12px 0;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 6px;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .profile-item {
+            margin-bottom: 8px;
+        }
+
+        .profile-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+
+        .profile-value {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        /* 答卷解析小组件 */
+        .q-record {
+            padding: 10px 0;
+            border-bottom: 1px solid #f8fafc;
+            font-size: 0.85rem;
+        }
+
+        .q-record-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .q-text {
+            color: var(--text-primary);
+        }
+
+        .q-score-badge {
+            font-size: 0.75rem;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .q-score-badge.danger { background-color: #fee2e2; color: #ef4444; }
+        .q-score-badge.warn { background-color: #fffbeb; color: #f59e0b; }
+        .q-score-badge.safe { background-color: #f0fdf4; color: #10b981; }
+
+        .q-answer-text {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        /* 全局加载等待 */
+        .page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .admin-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border-color);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 登录口令遮罩墙 -->
+<div class="login-overlay" id="login-overlay">
+    <div class="login-card">
+        <h2>🔒 后台管理系统登录</h2>
+        <p>请输入数据拉取安全校验口令（可从脚本管理员处获取）</p>
+        <div class="input-group">
+            <label for="login-passcode">访问口令</label>
+            <input type="password" id="login-passcode" placeholder="••••••" maxlength="12" onkeydown="if(event.key === 'Enter') login()">
+        </div>
+        <button class="login-btn" id="login-btn" onclick="login()">验证并登入</button>
+    </div>
+</div>
+
+<!-- 页面全局加载器 -->
+<div class="page-loader" id="page-loader" style="display: none;">
+    <div class="admin-spinner"></div>
+</div>
+
+<div class="admin-layout" id="admin-layout" style="display: none;">
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon">N</div>
+            <div class="logo-text">
+                Nutrilite ABO
+                <span>隐性饥饿健康引流后台</span>
+            </div>
+        </div>
+        <ul class="nav-list">
+            <li class="nav-item active" onclick="switchTab('dashboard')" id="nav-dashboard">
+                <span>📊</span> 数据仪表盘
+            </li>
+            <li class="nav-item" onclick="switchTab('leads')" id="nav-leads">
+                <span>👥</span> 客户线索明细
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <span style="font-size: 0.75rem; color: #64748b;">v2.0 安全版</span>
+            <button class="logout-btn" onclick="logout()">退出登录</button>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        
+        <!-- 头部导航 -->
+        <div class="content-header">
+            <div class="content-title">
+                <h1 id="page-heading">数据仪表盘</h1>
+                <p id="page-subheading">为您汇总所有的健康评估客户指标，开发纽崔莱销售潜力</p>
+            </div>
+            <button class="refresh-btn" onclick="fetchData(true)">
+                <span>🔄</span> 刷新云端数据
+            </button>
+        </div>
+
+        <!-- 4大 KPI 汇总指标栏 -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon blue">👥</div>
+                <div class="kpi-details">
+                    <h3>总测试客户</h3>
+                    <div class="kpi-value" id="kpi-total">0</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon green">📞</div>
+                <div class="kpi-details">
+                    <h3>留电线索</h3>
+                    <div class="kpi-value" id="kpi-phone">0</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon orange">🔥</div>
+                <div class="kpi-details">
+                    <h3>留电转化率</h3>
+                    <div class="kpi-value" id="kpi-conv">0.0%</div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon purple">🎯</div>
+                <div class="kpi-details">
+                    <h3>中重度高危意向</h3>
+                    <div class="kpi-value" id="kpi-highrisk">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 标签页一：仪表盘可视化板块 -->
+        <div id="tab-view-dashboard">
+            <div class="dashboard-row">
+                <!-- 隐性饥饿指数分段比例 (Chart.js) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">客户隐性饥饿级别分布</h3>
+                    </div>
+                    <div style="height: 300px; display: flex; justify-content: center; align-items: center;">
+                        <canvas id="levelChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 纽崔莱产品匹配机会排行 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">纽崔莱 (Nutrilite) 产品销售机会排行</h3>
+                    </div>
+                    <div class="opp-list" id="opp-list-container">
+                        <!-- 动态生成的纽崔莱产品机会条 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 最频发健康症状统计 -->
+            <div class="card" style="margin-bottom: 30px;">
+                <div class="card-header">
+                    <h3 class="card-title">客户频发身体亚健康表现 (ABO 促单切入点)</h3>
+                </div>
+                <div style="height: 320px;">
+                    <canvas id="symptomsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 标签页二：客户明细明细表板块 -->
+        <div id="tab-view-leads" style="display: none;">
+            <!-- 过滤栏 -->
+            <div class="filter-section">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="search-input" placeholder="输入姓名或电话进行搜索..." oninput="applyFilters()">
+                </div>
+                <select class="filter-select" id="filter-level" onchange="applyFilters()">
+                    <option value="">所有风险等级</option>
+                    <option value="良好">营养良好</option>
+                    <option value="轻度">轻度风险</option>
+                    <option value="中度">中度风险</option>
+                    <option value="重度">重度风险</option>
+                </select>
+                <select class="filter-select" id="filter-phone" onchange="applyFilters()">
+                    <option value="">所有留电状态</option>
+                    <option value="has_phone">已留电话</option>
+                    <option value="no_phone">未留电话</option>
+                </select>
+            </div>
+
+            <!-- 表格 -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>测评时间</th>
+                            <th>姓名</th>
+                            <th>性别</th>
+                            <th>联系电话</th>
+                            <th>BMI</th>
+                            <th>问卷得分</th>
+                            <th>风险级别</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leads-table-body">
+                        <!-- 动态渲染数据行 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- 侧边滑出数据抽屉 -->
+<div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
+<div class="drawer" id="detail-drawer">
+    <div class="drawer-header">
+        <h3 class="drawer-title">客户健康答卷详情</h3>
+        <button class="drawer-close" onclick="closeDrawer()">&times;</button>
+    </div>
+    <div class="drawer-body" id="drawer-body-content">
+        <!-- 动态渲染用户基本生理画像和20道选择题的详细扣分明细 -->
+    </div>
+</div>
+
+<script>
+    // ----------------------------------------------------
+    // 配置：请在此处填入您在 Google Apps Script 中获取的真实 Web 应用 URL
+    // ----------------------------------------------------
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxg6qT2T9RUeQbDdPAGm35Hx79DYJGONcMQf0Qi5cS9tDG0GWwq0lZkrIItQ883zdX5/exec';
+
+    // 全局数据源
+    let database = [];
+    let activeTab = 'dashboard';
+    
+    // 图表句柄 (用于销毁重绘)
+    let levelChartInstance = null;
+    let symptomsChartInstance = null;
+
+    // 问卷原题，用于详细页面比对
+    const questionsText = [
+        "1. 每日新鲜蔬菜摄入量达标情况",
+        "2. 每日吃新鲜水果的频率",
+        "3. 主食中粗粮谷物的占比情况",
+        "4. 吃泡面或高度加工食品的频率",
+        "5. 外就餐或高油盐快餐频次",
+        "6. 每日奶类或豆制品的摄入量",
+        "7. 自身偏食挑食的习惯严重程度",
+        "8. 每周海产品或富锌碘食物频次",
+        "9. 经常莫名疲劳、精力不济",
+        "10. 抵抗力差，易感冒生病",
+        "11. 频发口腔溃疡或嘴角发炎牙龈出血",
+        "12. 暗光下视力差或眼睛容易干涩",
+        "13. 皮肤脱屑干燥或指甲脆弱有白点",
+        "14. 近期脱发或掉发严重",
+        "15. 注意力难集中或经常忘事",
+        "16. 容易无故烦躁不安或情绪低落",
+        "17. 脸色苍白或蹲下站起头晕眼花(贫血)",
+        "18. 受伤后伤口愈合速度变慢",
+        "19. 经常发生肌肉抽筋或酸痛骨痛",
+        "20. 生理期/孕期压力大消耗大"
+    ];
+
+    // 初始化检查
+    window.onload = function() {
+        const cachedPass = localStorage.getItem('admin_passcode');
+        if (cachedPass) {
+            document.getElementById('login-passcode').value = cachedPass;
+            login(true); // 静默登录
+        }
+    };
+
+    // 登录验证逻辑
+    function login(isSilent = false) {
+        const passcode = document.getElementById('login-passcode').value.trim();
+        if (!passcode) {
+            if (!isSilent) alert('请输入安全口令');
+            return;
+        }
+
+        const overlay = document.getElementById('login-overlay');
+        const layout = document.getElementById('admin-layout');
+        const loader = document.getElementById('page-loader');
+
+        if (!isSilent) loader.style.display = 'flex';
+
+        // 如果未配置 URL，采用演示数据
+        if (scriptURL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' || scriptURL.trim() === '') {
+            loader.style.display = 'none';
+            if (passcode === '123456') {
+                localStorage.setItem('admin_passcode', passcode);
+                overlay.style.display = 'none';
+                layout.style.display = 'flex';
+                loadDemoData();
+            } else {
+                if (!isSilent) alert('口令验证失败！演示环境默认口令为：123456');
+                localStorage.removeItem('admin_passcode');
+            }
+            return;
+        }
+
+        const requestURL = `${scriptURL}?passcode=${encodeURIComponent(passcode)}`;
+        fetch(requestURL)
+            .then(res => res.json())
+            .then(data => {
+                loader.style.display = 'none';
+                if (data && data.error === "Unauthorized") {
+                    if (!isSilent) alert('验证码校验失败，未授权的访问！');
+                    localStorage.removeItem('admin_passcode');
+                } else if (Array.isArray(data)) {
+                    // 登录成功
+                    localStorage.setItem('admin_passcode', passcode);
+                    overlay.style.display = 'none';
+                    layout.style.display = 'flex';
+                    database = data;
+                    renderAll();
+                } else {
+                    if (!isSilent) alert('接口数据格式错误，请联系技术维护！');
+                }
+            })
+            .catch(err => {
+                loader.style.display = 'none';
+                console.error(err);
+                if (!isSilent) alert('无法同步云端数据，可能网络阻塞或 Google 脚本无响应，请重试！');
+            });
+    }
+
+    // 登出
+    function logout() {
+        localStorage.removeItem('admin_passcode');
+        location.reload();
+    }
+
+    // 主动同步刷新
+    function fetchData(showFeedback = false) {
+        const passcode = localStorage.getItem('admin_passcode') || '';
+        if (!passcode) return;
+
+        const loader = document.getElementById('page-loader');
+        loader.style.display = 'flex';
+
+        if (scriptURL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' || scriptURL.trim() === '') {
+            setTimeout(() => {
+                loader.style.display = 'none';
+                loadDemoData();
+                if (showFeedback) alert('同步完成！已成功重置本地演示 (Demo) 数据。');
+            }, 500);
+            return;
+        }
+
+        const requestURL = `${scriptURL}?passcode=${encodeURIComponent(passcode)}`;
+        fetch(requestURL)
+            .then(res => res.json())
+            .then(data => {
+                loader.style.display = 'none';
+                if (data && data.error === "Unauthorized") {
+                    alert('授权失效，请重新登录！');
+                    logout();
+                } else if (Array.isArray(data)) {
+                    database = data;
+                    renderAll();
+                    if (showFeedback) alert('云端数据同步成功！');
+                }
+            })
+            .catch(err => {
+                loader.style.display = 'none';
+                console.error(err);
+                alert('网络连接错误，无法同步云端，将展示本地缓存数据。');
+            });
+    }
+
+    // 装载 Demo 数据方便测试
+    function loadDemoData() {
+        database = [
+            {time:"2026-06-12T12:00:00Z", name:"陈志伟", gender:"男", phone:"0123456789", height:172, weight:78.5, bmi:"26.5", score:68, level:"中度隐性饥饿 (建议及早干预)", q0:5, q1:3, q2:3, q3:5, q4:5, q5:1, q6:3, q7:1, q8:5, q9:3, q10:3, q11:1, q12:3, q13:1, q14:3, q15:3, q16:5, q17:0, q18:5, q19:5},
+            {time:"2026-06-12T12:30:00Z", name:"林美君", gender:"女", phone:"0176543210", height:160, weight:46.2, bmi:"18.0", score:42, level:"轻度隐性饥饿风险", q0:3, q1:1, q2:1, q3:3, q4:1, q5:1, q6:5, q7:0, q8:3, q9:3, q10:1, q11:5, q12:1, q13:5, q14:5, q15:1, q16:1, q17:5, q18:0, q19:1},
+            {time:"2026-06-12T13:10:00Z", name:"张国强", gender:"男", phone:"", height:178, weight:68.0, bmi:"21.5", score:15, level:"健康优良 (低隐性饥饿风险)", q0:1, q1:0, q2:0, q3:1, q4:1, q5:0, q6:1, q7:0, q8:1, q9:1, q10:1, q11:0, q12:0, q13:1, q14:0, q15:0, q16:1, q17:0, q18:1, q19:0},
+            {time:"2026-06-12T14:15:00Z", name:"李秀兰", gender:"女", phone:"0129998887", height:155, weight:70.0, bmi:"29.1", score:85, level:"重度隐性饥饿 (高危红色预警)", q0:5, q1:5, q2:5, q3:5, q4:5, q5:5, q6:5, q7:3, q8:5, q9:5, q10:5, q11:3, q12:3, q13:3, q14:3, q15:3, q16:5, q17:5, q18:3, q19:3},
+            {time:"2026-06-12T15:00:00Z", name:"Mohd Ali", gender:"男", phone:"0134445556", height:170, weight:65.0, bmi:"22.5", score:28, level:"轻度隐性饥饿风险", q0:3, q1:3, q2:1, q3:1, q4:3, q5:3, q6:3, q7:1, q8:1, q9:1, q10:1, q11:1, q12:0, q13:0, q14:1, q15:1, q16:1, q17:0, q18:1, q19:1},
+            {time:"2026-06-12T16:40:00Z", name:"黄若熙", gender:"女", phone:"", height:165, weight:50.0, bmi:"18.4", score:55, level:"中度隐性饥饿 (建议及早干预)", q0:3, q1:3, q2:3, q3:3, q4:3, q5:1, q6:5, q7:3, q8:3, q9:5, q10:3, q11:1, q12:3, q13:1, q14:1, q15:3, q16:1, q17:3, q18:1, q19:3}
+        ];
+        renderAll();
+    }
+
+    // 页面切页逻辑
+    function switchTab(tab) {
+        activeTab = tab;
+        document.getElementById('nav-dashboard').classList.remove('active');
+        document.getElementById('nav-leads').classList.remove('active');
+        document.getElementById('tab-view-dashboard').style.display = 'none';
+        document.getElementById('tab-view-leads').style.display = 'none';
+
+        if (tab === 'dashboard') {
+            document.getElementById('nav-dashboard').classList.add('active');
+            document.getElementById('tab-view-dashboard').style.display = 'block';
+            document.getElementById('page-heading').innerText = '数据仪表盘';
+            document.getElementById('page-subheading').innerText = '为您汇总所有的健康评估客户指标，开发纽崔莱销售潜力';
+            renderCharts(); // 切回时重画图表防大小出错
+        } else {
+            document.getElementById('nav-leads').classList.add('active');
+            document.getElementById('tab-view-leads').style.display = 'block';
+            document.getElementById('page-heading').innerText = '客户线索明细';
+            document.getElementById('page-subheading').innerText = '查询、筛选客户答题详情，通过定制化 WhatsApp 消息一键切入销售';
+            renderTable(database);
+        }
+    }
+
+    // 汇总指标、明细表、图表综合渲染
+    function renderAll() {
+        // 1. 核心 KPI 数据分析
+        const total = database.length;
+        const phoneLeads = database.filter(item => item.phone && item.phone.trim().length > 3);
+        const phoneCount = phoneLeads.length;
+        const conversion = total > 0 ? ((phoneCount / total) * 100).toFixed(1) + '%' : '0.0%';
+        
+        // 计算中度和重度风险总人数
+        const highRiskCount = database.filter(item => {
+            const score = parseInt(item.score);
+            return score > 50; // 中度 50-80, 重度 80-100
+        }).length;
+
+        document.getElementById('kpi-total').innerText = total;
+        document.getElementById('kpi-phone').innerText = phoneCount;
+        document.getElementById('kpi-conv').innerText = conversion;
+        document.getElementById('kpi-highrisk').innerText = highRiskCount;
+
+        // 2. 渲染仪表盘卡片与图表
+        renderOpportunityList();
+        renderCharts();
+
+        // 3. 渲染客户列表
+        if (activeTab === 'leads') {
+            applyFilters();
+        }
+    }
+
+    // 纽崔莱推荐产品销售机会模型计算
+    function renderOpportunityList() {
+        const total = database.length;
+        if (total === 0) {
+            document.getElementById('opp-list-container').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-secondary);">暂无客户分析数据</div>';
+            return;
+        }
+
+        // 定义产品评估机会规则
+        const products = [
+            {
+                name: "纽崔莱 Double X 综合营养片",
+                desc: "针对：蔬果粗粮摄入少，整体微量元素存在盲区者 (总分>40分，或Q1、Q2、Q3失分多)",
+                check: item => {
+                    const avgDietScore = (parseInt(item.q0) + parseInt(item.q1) + parseInt(item.q2)) / 3;
+                    return parseInt(item.score) > 40 || avgDietScore >= 3;
+                }
+            },
+            {
+                name: "纽崔莱 钙镁D片 (Cal Mag D)",
+                desc: "针对：缺乏奶豆摄入、夜晚肌肉抽筋、酸痛骨痛者 (Q5或Q18得分>=3分)",
+                check: item => parseInt(item.q5) >= 3 || parseInt(item.q18) >= 3
+            },
+            {
+                name: "纽崔莱 天然 B 族维生素片",
+                desc: "针对：全吃精米白面、莫名疲劳、脱发、脑力下降者 (Q2、Q8、Q13、Q14得分>=3分)",
+                check: item => parseInt(item.q2) >= 3 || parseInt(item.q8) >= 3 || parseInt(item.q13) >= 3 || parseInt(item.q14) >= 3
+            },
+            {
+                name: "纽崔莱 铁叶酸片 (Iron-Folic)",
+                desc: "针对：脸色苍白、蹲下起立头晕眼花等贫血倾向者 (Q16得分>=3分)",
+                check: item => parseInt(item.q16) >= 3
+            },
+            {
+                name: "纽崔莱 天然维生素 C 片",
+                desc: "针对：换季易感冒生病、常发口腔溃疡牙龈出血者 (Q9或Q10得分>=3分)",
+                check: item => parseInt(item.q9) >= 3 || parseInt(item.q10) >= 3
+            },
+            {
+                name: "纽崔莱 蓝莓叶黄素 / 越橘益生元",
+                desc: "针对：眼睛发干、夜间视力差、视物模糊者 (Q11得分>=3分)",
+                check: item => parseInt(item.q11) >= 3
+            }
+        ];
+
+        // 计算每种产品的匹配率
+        const results = products.map(prod => {
+            const matchedCount = database.filter(prod.check).length;
+            const pct = total > 0 ? Math.round((matchedCount / total) * 100) : 0;
+            return { name: prod.name, desc: prod.desc, pct: pct };
+        });
+
+        // 降序排序
+        results.sort((a, b) => b.pct - a.pct);
+
+        let html = '';
+        results.forEach(item => {
+            html += `
+                <div class="opp-item">
+                    <div class="opp-info">
+                        <div class="opp-name">${item.name}</div>
+                        <div class="opp-desc">${item.desc}</div>
+                    </div>
+                    <div class="opp-bar-container">
+                        <div class="opp-pct">${item.pct}% 意向</div>
+                        <div class="opp-bar">
+                            <div class="opp-bar-fill" style="width: ${item.pct}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('opp-list-container').innerHTML = html;
+    }
+
+    // Chart.js 图表渲染
+    function renderCharts() {
+        if (database.length === 0) return;
+
+        // 1. 隐性饥饿级别饼图数据
+        const levels = { good: 0, mild: 0, moderate: 0, severe: 0 };
+        database.forEach(item => {
+            const score = parseInt(item.score);
+            if (score <= 20) levels.good++;
+            else if (score <= 50) levels.mild++;
+            else if (score <= 80) levels.moderate++;
+            else levels.severe++;
+        });
+
+        const ctxLevel = document.getElementById('levelChart').getContext('2d');
+        if (levelChartInstance) levelChartInstance.destroy();
+        levelChartInstance = new Chart(ctxLevel, {
+            type: 'doughnut',
+            data: {
+                labels: ['营养良好 (≤20分)', '轻度风险 (21-50分)', '中度风险 (51-80分)', '重度风险 (>80分)'],
+                datasets: [{
+                    data: [levels.good, levels.mild, levels.moderate, levels.severe],
+                    backgroundColor: ['#10b981', '#f59e0b', '#f97316', '#ef4444'],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 12, font: { weight: 'bold' } }
+                    }
+                }
+            }
+        });
+
+        // 2. 最频发健康症状统计柱状图 (检查 Q8-Q19，得分>=3 即代表出现症状)
+        const symptomLabels = [
+            '易疲劳', '易感冒', '口腔溃疡/出血', '干涩夜盲', '皮肤干/指甲白点', '脱发严重', '记忆下降', '焦躁低落', '脸色差/起猛头晕', '伤口合慢', '抽筋骨痛'
+        ];
+        const symptomQIndexes = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]; // 对应数组 q8 ~ q18
+        const symptomCounts = new Array(symptomLabels.length).fill(0);
+
+        database.forEach(item => {
+            symptomQIndexes.forEach((qIndex, idx) => {
+                const answerScore = parseInt(item['q' + qIndex]);
+                if (answerScore >= 3) {
+                    symptomCounts[idx]++;
+                }
+            });
+        });
+
+        const ctxSymptom = document.getElementById('symptomsChart').getContext('2d');
+        if (symptomsChartInstance) symptomsChartInstance.destroy();
+        symptomsChartInstance = new Chart(ctxSymptom, {
+            type: 'bar',
+            data: {
+                labels: symptomLabels,
+                datasets: [{
+                    label: '出现轻度及以上症状人数',
+                    data: symptomCounts,
+                    backgroundColor: 'rgba(42, 122, 92, 0.85)',
+                    hoverBackgroundColor: 'rgba(27, 82, 61, 1)',
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    }
+
+    // 渲染表格明细
+    function renderTable(data) {
+        const tableBody = document.getElementById('leads-table-body');
+        if (data.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-secondary);">没有找到符合条件的线索客户</td></tr>';
+            return;
+        }
+
+        let html = '';
+        data.forEach((item, index) => {
+            // 解析风险状态级别 class
+            let badgeClass = 'good';
+            let simpleLevel = '营养良好';
+            const score = parseInt(item.score);
+            
+            if (score <= 20) {
+                badgeClass = 'good';
+                simpleLevel = '营养良好';
+            } else if (score <= 50) {
+                badgeClass = 'mild';
+                simpleLevel = '轻度风险';
+            } else if (score <= 80) {
+                badgeClass = 'moderate';
+                simpleLevel = '中度风险';
+            } else {
+                badgeClass = 'severe';
+                simpleLevel = '重度风险';
+            }
+
+            // 对话模板组装
+            const hasPhone = item.phone && item.phone.trim().length > 3;
+            const waButton = hasPhone 
+                ? `<button class="action-btn whatsapp" onclick="startWhatsAppFollowup(${index})">📱 WhatsApp</button>` 
+                : `<button class="action-btn whatsapp disabled" title="客户未填写电话">🚫 无电话</button>`;
+            
+            // 时间人性化格式化 (取年月日小时分钟)
+            const dateStr = item.time ? new Date(item.time).toLocaleString('zh-CN', {month: 'numeric', day: 'numeric', hour: '2-digit', minute:'2-digit'}) : '--';
+
+            html += `
+                <tr>
+                    <td>${dateStr}</td>
+                    <td style="font-weight:600;">${item.name}</td>
+                    <td>${item.gender}</td>
+                    <td>${item.phone || '<span style="color:#cbd5e1;">未留</span>'}</td>
+                    <td>${item.bmi}</td>
+                    <td style="font-family:'Outfit', sans-serif; font-weight:700;">${item.score}</td>
+                    <td><span class="badge ${badgeClass}">${simpleLevel} (${item.score}分)</span></td>
+                    <td>
+                        <div class="action-group">
+                            <button class="action-btn details" onclick="showLeadDetails(${index})">🔍 详情</button>
+                            ${waButton}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        tableBody.innerHTML = html;
+    }
+
+    // 前端多维过滤引擎
+    function applyFilters() {
+        const query = document.getElementById('search-input').value.toLowerCase().trim();
+        const filterLevel = document.getElementById('filter-level').value;
+        const filterPhone = document.getElementById('filter-phone').value;
+
+        const filtered = database.filter(item => {
+            // 搜索关键字匹配姓名或电话
+            const matchQuery = item.name.toLowerCase().includes(query) || (item.phone && item.phone.includes(query));
+            
+            // 匹配风险等级
+            let matchLevel = true;
+            if (filterLevel) {
+                const score = parseInt(item.score);
+                if (filterLevel === '良好') matchLevel = score <= 20;
+                else if (filterLevel === '轻度') matchLevel = score > 20 && score <= 50;
+                else if (filterLevel === '中度') matchLevel = score > 50 && score <= 80;
+                else if (filterLevel === '重度') matchLevel = score > 80;
+            }
+
+            // 匹配手机留电状态
+            let matchPhone = true;
+            if (filterPhone) {
+                const hasPhone = item.phone && item.phone.trim().length > 3;
+                matchPhone = (filterPhone === 'has_phone') ? hasPhone : !hasPhone;
+            }
+
+            return matchQuery && matchLevel && matchPhone;
+        });
+
+        renderTable(filtered);
+    }
+
+    // 格式化马来西亚等国家电话前缀以适配 WhatsApp 
+    function formatPhoneNumber(phone) {
+        let clean = phone.replace(/[^\d]/g, '');
+        if (clean.startsWith('0')) {
+            clean = '6' + clean; // 自动转换为大马 60 前缀
+        }
+        if (clean.length > 5 && !clean.startsWith('60') && !clean.startsWith('6')) {
+            clean = '60' + clean;
+        }
+        return clean;
+    }
+
+    // 提取高频健康痛点用于话术组装
+    function getLeadSymptoms(lead) {
+        const symptomIndices = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+        const symptomNames = [
+            '精力差易疲劳', '免疫下降易感冒', '口腔溃疡/牙龈出血', '暗光视力下降/干涩', '皮肤干/指甲易断有白点', '脱发多', '记性差注意力不集中', '无故焦躁不安/情绪低', '贫血头晕脸色白', '伤口合慢', '频繁抽筋酸痛骨痛'
+        ];
+        
+        let symptoms = [];
+        symptomIndices.forEach((qIndex, idx) => {
+            if (parseInt(lead['q' + qIndex]) >= 3) {
+                symptoms.push(symptomNames[idx]);
+            }
+        });
+        
+        return symptoms.length > 0 ? symptoms.slice(0, 3).join('、') : '亚健康生理隐患';
+    }
+
+    // WhatsApp 一键销售场景短信启动器
+    function startWhatsAppFollowup(index) {
+        const lead = database[index];
+        if (!lead.phone) return;
+
+        const cleanPhone = formatPhoneNumber(lead.phone);
+        const name = lead.name;
+        const score = lead.score;
+        let simpleLevel = '低隐性饥饿';
+        if (score > 20 && score <= 50) simpleLevel = '轻度隐性饥饿风险';
+        else if (score > 50 && score <= 80) simpleLevel = '中度隐性饥饿风险';
+        else if (score > 80) simpleLevel = '重度隐性饥饿警告';
+
+        const mainSymptoms = getLeadSymptoms(lead);
+
+        // ABO 专属破冰话术
+        const messageText = `您好 ${name}，我是您的纽崔莱专属健康顾问。看到您之前提交的隐性饥饿测评结果为 ${score} 分（${simpleLevel}）。
+报告中显示您的身体目前可能处于特定的亚健康状态（如：${mainSymptoms}）。
+我们这套系统刚好针对该板块推荐了一套由深海鲑鱼油、Double X等组合成的膳食营养调理方案，可以有效帮助改善这些症状。请问您平时经常有觉得困倦或容易上火的情况吗？`;
+
+        const waURL = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageText)}`;
+        window.open(waURL, '_blank');
+    }
+
+    // 打开抽屉查看明细
+    function showLeadDetails(index) {
+        const lead = database[index];
+        const drawer = document.getElementById('detail-drawer');
+        const backdrop = document.getElementById('drawer-backdrop');
+        const content = document.getElementById('drawer-body-content');
+
+        // 计算 BMI 状态和 Class
+        const bmi = parseFloat(lead.bmi);
+        let bmiStatus = '正常';
+        let bmiBadge = 'good';
+        if (bmi < 18.5) { bmiStatus = '偏瘦'; bmiBadge = 'mild'; }
+        else if (bmi >= 24 && bmi < 28) { bmiStatus = '超重'; bmiBadge = 'moderate'; }
+        else if (bmi >= 28) { bmiStatus = '肥胖'; bmiBadge = 'severe'; }
+
+        // 拼接答题扣分表
+        let qListHtml = '';
+        for (let i = 0; i < 20; i++) {
+            const val = parseInt(lead['q' + i]);
+            let valText = '优良';
+            let badgeClass = 'safe';
+            
+            if (val === 5) { badgeClass = 'danger'; valText = '极差 (扣5分)'; }
+            else if (val === 3) { badgeClass = 'warn'; valText = '欠佳 (扣3分)'; }
+            else if (val === 1) { badgeClass = 'warn'; valText = '一般 (扣1分)'; }
+            else { badgeClass = 'safe'; valText = '健康 (扣0分)'; }
+
+            qListHtml += `
+                <div class="q-record">
+                    <div class="q-record-header">
+                        <span class="q-text">${questionsText[i]}</span>
+                        <span class="q-score-badge ${badgeClass}">${valText}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染抽屉体
+        content.innerHTML = `
+            <div class="drawer-section">
+                <h4>👤 客户基本指标画像</h4>
+                <div class="profile-grid">
+                    <div class="profile-item">
+                        <div class="profile-label">姓名</div>
+                        <div class="profile-value">${lead.name} (${lead.gender})</div>
+                    </div>
+                    <div class="profile-item">
+                        <div class="profile-label">联系电话</div>
+                        <div class="profile-value">${lead.phone || '<span style="color:#cbd5e1;">未留</span>'}</div>
+                    </div>
+                    <div class="profile-item">
+                        <div class="profile-label">身型指标</div>
+                        <div class="profile-value">${lead.height}cm / ${lead.weight}kg</div>
+                    </div>
+                    <div class="profile-item">
+                        <div class="profile-label">BMI 质量指数</div>
+                        <div class="profile-value">${lead.bmi} <span class="badge ${bmiBadge}" style="font-size:0.75rem; padding: 1px 4px;">${bmiStatus}</span></div>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; padding: 10px; background-color:#f8fafc; border-radius:6px; border:1px solid #f1f5f9;">
+                    <div class="profile-label">隐性饥饿综合评级</div>
+                    <div class="profile-value" style="color:var(--primary-dark); font-size: 0.95rem; margin-top:2px;">
+                        ${lead.level} (${lead.score}分)
+                    </div>
+                </div>
+            </div>
+
+            <div class="drawer-section">
+                <h4>📝 20项营养及症状问卷答卷明细</h4>
+                <div style="max-height: 400px; overflow-y:auto; padding-right:5px;">
+                    ${qListHtml}
+                </div>
+            </div>
+        `;
+
+        backdrop.style.display = 'block';
+        setTimeout(() => {
+            drawer.classList.add('active');
+        }, 10);
+    }
+
+    // 关闭抽屉
+    function closeDrawer() {
+        const drawer = document.getElementById('detail-drawer');
+        const backdrop = document.getElementById('drawer-backdrop');
+        
+        drawer.classList.remove('active');
+        setTimeout(() => {
+            backdrop.style.display = 'none';
+        }, 400);
+    }
+</script>
+</body>
+</html>

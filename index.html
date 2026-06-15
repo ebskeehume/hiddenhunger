@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隐性饥饿健康状态评估问卷</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary: #2a7a5c;
+            --primary-light: #eef7f4;
+            --primary-dark: #1b523d;
+            --accent: #e88d48;
+            --accent-light: #fef4ec;
+            --accent-dark: #c86b25;
+            --bg-color: #faf9f6;
+            --card-bg: rgba(255, 255, 255, 0.98);
+            --text-primary: #2c3e50;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --radius: 16px;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+            --shadow-lg: 0 20px 25px -5px rgba(42, 122, 92, 0.07), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: linear-gradient(135deg, #f4f8f6 0%, #edf3f0 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: var(--radius);
+            padding: 40px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                margin: 10px auto;
+                padding: 24px 16px;
+            }
+        }
+
+        /* 统一标题样式 */
+        h1, h2, h3, h4 {
+            color: var(--text-primary);
+            font-weight: 700;
+            margin-top: 0;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+            color: var(--primary-dark);
+            letter-spacing: -0.5px;
+        }
+
+        h2.step-title {
+            font-size: 1.6rem;
+            border-left: 5px solid var(--primary);
+            padding-left: 12px;
+            margin-bottom: 8px;
+        }
+
+        p.desc {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+
+        p.step-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+
+        /* 进度条与向导导航 */
+        .progress-bar-container {
+            margin-bottom: 20px;
+        }
+
+        .progress-container {
+            height: 6px;
+            background-color: var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+            transition: width 0.4s ease;
+        }
+
+        .steps-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            margin-bottom: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .step-indicator {
+            padding-bottom: 4px;
+            border-bottom: 2px solid transparent;
+            transition: var(--transition);
+        }
+
+        .step-indicator.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .step-indicator.completed {
+            color: var(--primary-dark);
+        }
+
+        /* 表单控件样式 */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .required {
+            color: #ef4444;
+            margin-left: 2px;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="tel"],
+        .form-group input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+            background-color: #fafbfb;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(42, 122, 92, 0.15);
+        }
+
+        /* 性别选择器卡片 */
+        .gender-selector {
+            display: flex;
+            gap: 15px;
+        }
+
+        .gender-card {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 11px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            background-color: #fafbfb;
+        }
+
+        .gender-card input {
+            display: none;
+        }
+
+        .gender-card:hover {
+            border-color: var(--primary-light);
+            background-color: var(--primary-light);
+        }
+
+        .gender-card:has(input:checked) {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        /* 动态问题卡片 */
+        .question-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            text-align: left;
+        }
+
+        .question-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: #cbd5e1;
+        }
+
+        .question-header {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: flex-start;
+        }
+
+        .question-number {
+            background-color: var(--accent-light);
+            color: var(--accent-dark);
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .question-text {
+            font-weight: 600;
+            font-size: 1.05rem;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* 选项卡片设计 */
+        .option-card {
+            display: flex;
+            align-items: center;
+            padding: 14px 18px;
+            border: 2.2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            background-color: #ffffff;
+        }
+
+        .option-card input[type="radio"] {
+            display: none;
+        }
+
+        .radio-indicator {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            margin-right: 15px;
+            display: inline-block;
+            position: relative;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+
+        .option-card:hover {
+            border-color: #94a3b8;
+            background-color: #f8fafc;
+        }
+
+        /* 选中状态 CSS (利用 :has 伪类) */
+        .option-card:has(input[type="radio"]:checked) {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            font-weight: 500;
+        }
+
+        .option-card:has(input[type="radio"]:checked) .radio-indicator {
+            border-color: var(--primary);
+        }
+
+        .option-card:has(input[type="radio"]:checked) .radio-indicator::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* 校验失败闪烁动画 */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .question-card.highlight-error {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+            animation: shake 0.3s ease-in-out 2;
+        }
+
+        /* BMI 刻度预览组件 */
+        .bmi-gauge-container {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .bmi-gauge-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            padding: 0 4px;
+        }
+
+        .bmi-gauge-bar {
+            height: 10px;
+            border-radius: 5px;
+            display: flex;
+            position: relative;
+            overflow: visible;
+            margin-bottom: 12px;
+        }
+
+        .bar-segment {
+            height: 100%;
+        }
+
+        .bar-segment.underweight {
+            width: 25%;
+            background-color: #3b82f6;
+            border-top-left-radius: 5px;
+            border-bottom-left-radius: 5px;
+        }
+
+        .bar-segment.normal {
+            width: 25%;
+            background-color: #10b981;
+        }
+
+        .bar-segment.overweight {
+            width: 25%;
+            background-color: #f59e0b;
+        }
+
+        .bar-segment.obese {
+            width: 25%;
+            background-color: #ef4444;
+            border-top-right-radius: 5px;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bmi-pointer {
+            width: 14px;
+            height: 14px;
+            background-color: #1e293b;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            position: absolute;
+            top: -2px;
+            transform: translateX(-50%);
+            transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+        }
+
+        .bmi-gauge-value {
+            text-align: center;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            outline: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 4px 6px rgba(42, 122, 92, 0.2);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px rgba(42, 122, 92, 0.25);
+        }
+
+        .btn-secondary {
+            background-color: #f1f5f9;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #e2e8f0;
+            transform: translateY(-1px);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .button-group .btn {
+            flex: 1;
+        }
+
+        /* 视图切换机制 */
+        .step-view {
+            display: none;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .step-view.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Intro 欢迎页面特殊样式 */
+        #step-intro-view {
+            text-align: center;
+        }
+
+        .hero-image-container {
+            margin: 20px auto 30px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .hero-svg {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* 报告页面布局 */
+        .results-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .results-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 30px;
+            margin-bottom: 35px;
+        }
+
+        @media (max-width: 768px) {
+            .results-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .results-left {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px 20px;
+        }
+
+        .results-right {
+            text-align: left;
+        }
+
+        /* 环形分数图表 */
+        .score-circle-wrapper {
+            position: relative;
+            width: 170px;
+            height: 170px;
+            margin-bottom: 20px;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring__circle {
+            transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.5s ease;
+        }
+
+        .score-text-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .score-number {
+            font-size: 3.2rem;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--text-primary);
+        }
+
+        .score-total {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .score-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 4px;
+        }
+
+        .user-meta-badge {
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 16px;
+            width: 100%;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .user-bmi-section {
+            width: 100%;
+        }
+
+        .advice-card {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            height: 100%;
+            transition: var(--transition);
+        }
+
+        .advice-header {
+            margin-bottom: 15px;
+            border-bottom: 1px dashed rgba(0,0,0,0.08);
+            padding-bottom: 12px;
+        }
+
+        .status-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .advice-list {
+            margin: 0;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .advice-list li {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .advice-list li::before {
+            content: "•";
+            color: var(--primary);
+            font-size: 1.3rem;
+            position: absolute;
+            left: 2px;
+            top: -2px;
+        }
+
+        /* 云端同步通知条 */
+        .sync-banner {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .sync-banner.success {
+            background-color: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .sync-banner.warning {
+            background-color: #fffbeb;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .sync-banner.error {
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fee2e2;
+        }
+
+        .banner-icon {
+            font-size: 1.15rem;
+            font-weight: bold;
+        }
+
+        /* 全局提交加载蒙层 */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(26, 38, 30, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .loading-content {
+            text-align: center;
+            max-width: 320px;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 54px;
+            height: 54px;
+            border: 4.5px solid rgba(255, 255, 255, 0.15);
+            border-left-color: var(--accent);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        /* 基础淡入动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 顶层向导步骤和进度条 -->
+    <div class="progress-bar-container" id="progress-bar-container" style="display: none;">
+        <div class="progress-container">
+            <div class="progress-bar-fill" id="survey-progress"></div>
+        </div>
+        <div class="steps-nav" id="steps-header-nav">
+            <span class="step-indicator" id="indicator-1">基本资料</span>
+            <span class="step-indicator" id="indicator-2">饮食习惯</span>
+            <span class="step-indicator" id="indicator-3">身体症状</span>
+        </div>
+    </div>
+
+    <!-- 主表单 -->
+    <form id="survey-form">
+        
+        <!-- 欢迎开始页 (Step 0) -->
+        <div class="step-view active" id="step-intro-view">
+            <div class="hero-image-container">
+                <svg class="hero-svg" viewBox="0 0 100 100" width="120" height="120">
+                    <circle cx="50" cy="53" r="32" fill="#2a7a5c" opacity="0.12" />
+                    <path d="M50 25 C32 25 32 55 50 78 C68 55 68 25 50 25 Z" fill="#2a7a5c" />
+                    <path d="M50 25 C54 15 64 15 59 25 Z" fill="#e88d48" />
+                    <circle cx="45" cy="46" r="3" fill="#ffffff" />
+                    <circle cx="54" cy="51" r="2.5" fill="#ffffff" opacity="0.75" />
+                </svg>
+            </div>
+            <h1>隐性饥饿健康状态评估</h1>
+            <p class="desc">
+                “吃得饱不等于吃得好”。很多人热量摄入足够甚至超标，却由于微量营养素（维生素与矿物质）严重缺乏，而使身体处于隐形营养不良状态，这就是<b>“隐性饥饿”</b>。<br><br>
+                请根据您最近一个月的真实身体及饮食情况作答。我们将为您生成专属评估报告并提供优化膳食结构指导。
+            </p>
+            <button type="button" class="btn btn-primary" onclick="goToStep(1)" style="width: 100%; max-width: 280px; margin-top: 10px;">
+                开始测评 <span style="margin-left: 8px;">→</span>
+            </button>
+        </div>
+
+        <!-- 步骤一：基本资料 (Step 1) -->
+        <div class="step-view" id="step-basic-view">
+            <h2 class="step-title">填写基本资料</h2>
+            <p class="step-desc">我们需要您的基础生理数据，用于结合答卷来综合分析您的身体质量指数 (BMI)</p>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="name">您的姓名<span class="required">*</span></label>
+                    <input type="text" id="name" required placeholder="请输入姓名">
+                </div>
+                <div class="form-group">
+                    <label>性别<span class="required">*</span></label>
+                    <div class="gender-selector">
+                        <label class="gender-card">
+                            <input type="radio" name="gender" value="男" required>
+                            <span>👨 男</span>
+                        </label>
+                        <label class="gender-card">
+                            <input type="radio" name="gender" value="女" required>
+                            <span>👩 女</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">联系电话 <span style="color:var(--text-secondary); font-weight:normal; font-size:0.85rem;">(选填，用于营养顾问为您提供免费专业指导)</span></label>
+                <input type="tel" id="phone" placeholder="例如: 0123456789">
+                <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px; display: flex; align-items: center; gap: 4px; line-height:1.4;">
+                    <span>🔒</span> <span>隐私保护承诺：您的个人数据将受到严格保护，仅用于本次健康评估及专属纽崔莱调理方案定制。</span>
+                </div>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="height">身高 (cm)<span class="required">*</span></label>
+                    <input type="number" id="height" min="50" max="250" step="0.1" required placeholder="请输入身高" oninput="calculateLiveBmi()">
+                </div>
+                <div class="form-group">
+                    <label for="weight">体重 (kg)<span class="required">*</span></label>
+                    <input type="number" id="weight" min="10" max="300" step="0.1" required placeholder="请输入体重" oninput="calculateLiveBmi()">
+                </div>
+            </div>
+
+            <!-- BMI 实时预测组件 -->
+            <div class="bmi-gauge-container" id="live-bmi-widget" style="display: none;">
+                <div class="bmi-gauge-labels">
+                    <span>偏瘦 (&lt;18.5)</span>
+                    <span>正常 (18.5-23.9)</span>
+                    <span>超重 (24.0-27.9)</span>
+                    <span>肥胖 (&ge;28.0)</span>
+                </div>
+                <div class="bmi-gauge-bar">
+                    <div class="bar-segment underweight"></div>
+                    <div class="bar-segment normal"></div>
+                    <div class="bar-segment overweight"></div>
+                    <div class="bar-segment obese"></div>
+                    <div class="bmi-pointer" id="bmi-pointer"></div>
+                </div>
+                <div class="bmi-gauge-value">
+                    您的 BMI 预计为: <strong id="bmi-val" style="color: var(--primary-dark)">--</strong> 
+                    ，体型状态属于: <span id="bmi-status" class="badge">--</span>
+                </div>
+            </div>
+
+            <div class="button-group" style="margin-top: 40px;">
+                <button type="button" class="btn btn-secondary" onclick="goToStep(0)">返回主页</button>
+                <button type="button" class="btn btn-primary" onclick="validateStep1()">下一步</button>
+            </div>
+        </div>
+
+        <!-- 步骤二：饮食习惯评估 (Step 2) -->
+        <div class="step-view" id="step-diet-view">
+            <h2 class="step-title">二、 饮食习惯评估</h2>
+            <p class="step-desc">请选择最符合您最近一个月日常状态的选项：</p>
+            
+            <div id="diet-questions-container">
+                <!-- 动态渲染 Q1 - Q8 -->
+            </div>
+
+            <div class="button-group" style="margin-top: 30px;">
+                <button type="button" class="btn btn-secondary" onclick="goToStep(1)">上一步</button>
+                <button type="button" class="btn btn-primary" onclick="validateDietStep()">下一步</button>
+            </div>
+        </div>
+
+        <!-- 步骤三：身体症状评估 (Step 3) -->
+        <div class="step-view" id="step-symptoms-view">
+            <h2 class="step-title">三、 身体症状评估</h2>
+            <p class="step-desc">以下症状常与特定维生素及矿物质（微量元素）匮乏高度关联，请根据实际感受作答：</p>
+            
+            <div id="symptoms-questions-container">
+                <!-- 动态渲染 Q9 - Q20 -->
+            </div>
+
+            <div class="button-group" style="margin-top: 30px;">
+                <button type="button" class="btn btn-secondary" onclick="goToStep(2)">上一步</button>
+                <button type="button" class="btn btn-primary" id="submit-btn" onclick="submitSurvey()">提交评估并查看结果</button>
+            </div>
+        </div>
+
+        <!-- 评估结果页 (Step 4) -->
+        <div class="step-view" id="step-results-view">
+            <div class="results-header">
+                <h2>评估报告已生成</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 0;">科学膳食调理，开启微量营养素防备之旅</p>
+            </div>
+
+            <!-- 数据传输云端反馈条 -->
+            <div class="sync-banner success" id="sync-banner-success" style="display:none;">
+                <span class="banner-icon">✓</span> 
+                <span class="banner-text">评估数据已成功同步至后台 Google Sheets 数据库。</span>
+            </div>
+            <div class="sync-banner warning" id="sync-banner-unconfigured" style="display:none;">
+                <span class="banner-icon">⚠</span> 
+                <span class="banner-text">【管理员提示】未配置 Google Sheets Web App URL，评估数据未能入库（本地报告已正常展现）。</span>
+            </div>
+            <div class="sync-banner error" id="sync-banner-error" style="display:none;">
+                <span class="banner-icon">✗</span> 
+                <span class="banner-text">网络通信失败，未能上传到后台。本地报告不受影响。</span>
+            </div>
+
+            <div class="results-layout">
+                <!-- 左侧仪表盘 -->
+                <div class="results-left">
+                    <div class="user-meta-badge">
+                        <span id="res-name" style="color: var(--primary-dark)">***</span> 同志，您的体型报告：
+                    </div>
+
+                    <!-- 动态环形进度条 -->
+                    <div class="score-circle-wrapper">
+                        <svg class="progress-ring" width="170" height="170">
+                            <circle stroke="#e2e8f0" stroke-width="10" fill="transparent" r="76" cx="85" cy="85" />
+                            <circle class="progress-ring__circle" stroke="var(--primary)" stroke-width="10" fill="transparent" r="76" cx="85" cy="85" stroke-linecap="round" />
+                        </svg>
+                        <div class="score-text-overlay">
+                            <div class="score-number" id="res-score">0</div>
+                            <div class="score-total">/ 100 分</div>
+                            <div class="score-label">隐性饥饿指数</div>
+                        </div>
+                    </div>
+
+                    <!-- 用户的 BMI 表盘 -->
+                    <div class="user-bmi-section">
+                        <div class="bmi-gauge-labels" style="padding: 0;">
+                            <span>偏瘦</span>
+                            <span>正常</span>
+                            <span>超重</span>
+                            <span>肥胖</span>
+                        </div>
+                        <div class="bmi-gauge-bar" style="height: 8px;">
+                            <div class="bar-segment underweight"></div>
+                            <div class="bar-segment normal"></div>
+                            <div class="bar-segment overweight"></div>
+                            <div class="bar-segment obese"></div>
+                            <div class="bmi-pointer" id="res-bmi-pointer"></div>
+                        </div>
+                        <div style="font-size: 0.88rem; font-weight:600; text-align:center;">
+                            您的 BMI 是: <strong id="res-bmi" style="color: var(--primary-dark)">--</strong> 
+                            (<span id="res-bmi-status">--</span>)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧详细诊断建议 -->
+                <div class="results-right">
+                    <div class="advice-card" id="res-advice-box">
+                        <div class="advice-header">
+                            <h3 class="status-title" id="res-level">--</h3>
+                        </div>
+                        <div id="res-advice">
+                            <!-- 动态加载的针对性建议列表 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-secondary" onclick="location.reload()" style="width: 100%; max-width: 250px;">重新测评</button>
+        </div>
+    </form>
+</div>
+
+<!-- 全局提交等待遮罩 -->
+<div class="loading-overlay" id="loading-overlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <p class="loading-text" id="loading-text">正在评估您的数据并同步至云端，请稍候...</p>
+    </div>
+</div>
+
+<script>
+    // ----------------------------------------------------
+    // 配置：请在此处填入您在 Google Apps Script 中获取的真实 Web 应用 URL
+    // ----------------------------------------------------
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxg6qT2T9RUeQbDdPAGm35Hx79DYJGONcMQf0Qi5cS9tDG0GWwq0lZkrIItQ883zdX5/exec';
+
+    // 问卷题目数据库：0分代表优良，分数越高越危险
+    const questions = [
+        { q: "1. 您每天摄入新鲜蔬菜的量达标吗？（建议每天至少3-5种，约300-500克）", options: [{t:"几乎不吃或吃很少", v:5}, {t:"偶尔吃一些，种类单一", v:3}, {t:"每天吃，但量和种类不太够", v:1}, {t:"每天吃够量，且种类丰富", v:0}] },
+        { q: "2. 您每天吃新鲜水果的频率是？（建议每天200-350克）", options: [{t:"极少吃水果", v:5}, {t:"一周吃1-2次", v:3}, {t:"经常吃，但偶尔忘记", v:1}, {t:"每天坚持吃新鲜水果", v:0}] },
+        { q: "3. 您的主食中，全谷物或粗粮（如燕麦、糙米、玉米等）的占比情况？", options: [{t:"全吃精白米面，不吃粗粮", v:5}, {t:"偶尔吃一次粗粮", v:3}, {t:"大约占主食的四分之一", v:1}, {t:"占主食的三分之一到一半", v:0}] },
+        { q: "4. 您平时为了方便或因为经济压力，吃快熟面（方便面）或高度加工食品的频率？", options: [{t:"几乎每天都吃", v:5}, {t:"一周吃3-4次", v:3}, {t:"偶尔吃（一周1次以内）", v:1}, {t:"几乎不吃", v:0}] },
+        { q: "5. 您在外就餐或吃高油高盐食物（如油炸食品、快餐）的频率？", options: [{t:"每天如此", v:5}, {t:"经常（每周3-5次）", v:3}, {t:"偶尔（每周1-2次）", v:1}, {t:"基本都是自己清淡烹饪", v:0}] },
+        { q: "6. 您每天摄入奶类或豆制品的量如何？", options: [{t:"完全不喝奶或不吃豆制品", v:5}, {t:"偶尔想起来才吃/喝", v:3}, {t:"经常吃，但量不多", v:1}, {t:"每天保证一杯奶或充足豆制品", v:0}] },
+        { q: "7. 您是否有偏食或挑食的习惯？", options: [{t:"非常严重，很多种类食物都不碰", v:5}, {t:"比较挑食，只吃自己喜欢的", v:3}, {t:"有一点挑食，但尽量保持均衡", v:1}, {t:"完全不挑食，什么都吃", v:0}] },
+        { q: "8. 您每周吃海产品（如鱼虾、海带）或富含碘、锌等微量元素食物的频率？", options: [{t:"从不吃", v:5}, {t:"极少吃，一个月不到1次", v:3}, {t:"每周至少吃1次", v:1}, {t:"每周吃2次或以上", v:0}] },
+        { q: "9. 您是否经常感到莫名其妙的疲劳、体力变差或精神不振？", options: [{t:"经常如此，休息也难以恢复", v:5}, {t:"有时会觉得很累", v:3}, {t:"偶尔在工作繁重时会有", v:1}, {t:"几乎不会，精力充沛", v:0}] },
+        { q: "10. 您的抵抗力情况如何？是否容易感冒、生病？", options: [{t:"非常容易生病，且恢复很慢", v:5}, {t:"换季时容易感冒", v:3}, {t:"偶尔小感冒", v:1}, {t:"身体很好，很少生病", v:0}] },
+        { q: "11. 您是否经常出现口腔溃疡、嘴角发炎或牙龈出血的情况？", options: [{t:"经常发生", v:5}, {t:"偶尔会上火发生", v:3}, {t:"极少发生", v:1}, {t:"从不发生", v:0}] },
+        { q: "12. 您在暗光下（如夜晚）视力是否明显变差（夜盲倾向），或常感眼睛干涩？", options: [{t:"非常明显，夜晚视力很差", v:5}, {t:"有时觉得眼睛干涩看不清", v:3}, {t:"看久了屏幕会有一点", v:1}, {t:"视力很好，没有不适", v:0}] },
+        { q: "13. 您的皮肤和指甲状态如何？（如皮肤干燥脱屑、指甲脆弱易断有白点）", options: [{t:"症状很严重且持续", v:5}, {t:"经常出现这些问题", v:3}, {t:"偶尔会有", v:1}, {t:"皮肤指甲一直很健康", v:0}] },
+        { q: "14. 您最近是否发现自己容易掉头发（脱发严重）？", options: [{t:"大把掉发，发量明显减少", v:5}, {t:"洗头时掉发较多", v:3}, {t:"有一点掉发，属于正常代谢", v:1}, {t:"头发很健康，极少脱发", v:0}] },
+        { q: "15. 您的注意力和记忆力近期状况如何？", options: [{t:"极度不集中，经常忘事", v:5}, {t:"有时觉得大脑迟钝", v:3}, {t:"偶尔稍微分心", v:1}, {t:"专注力强，记忆力好", v:0}] },
+        { q: "16. 您的情绪状态如何？是否容易无故烦躁不安或情绪低落？", options: [{t:"经常情绪失控或抑郁", v:5}, {t:"压力大时容易烦躁", v:3}, {t:"偶尔有些小情绪", v:1}, {t:"情绪一直很平稳积极", v:0}] },
+        { q: "17. 您是否有贫血症状？（如脸色苍白、蹲下站起时头晕眼花）", options: [{t:"非常频繁，甚至影响生活", v:5}, {t:"偶尔起猛了会头晕", v:3}, {t:"极少出现", v:1}, {t:"从没有过", v:0}] },
+        { q: "18. 您受小伤（如划破皮）后，伤口的愈合速度如何？", options: [{t:"非常慢，甚至容易化脓", v:5}, {t:"感觉比以前慢了", v:3}, {t:"正常速度愈合", v:1}, {t:"愈合非常快", v:0}] },
+        { q: "19. 您是否经常出现肌肉抽筋、酸痛或骨骼隐痛？（与缺钙或维生素D相关）", options: [{t:"经常半夜抽筋或骨痛", v:5}, {t:"运动后容易抽筋酸痛", v:3}, {t:"极偶尔发生", v:1}, {t:"从不抽筋", v:0}] },
+        { q: "20. （若是女性）是否处于孕期/哺乳期/生理期；（若是一般人）工作学业压力是否极大？", options: [{t:"是的，消耗极大且没刻意补充营养", v:5}, {t:"有些压力，饮食没太注意", v:3}, {t:"有压力但会主动吃营养补充食品", v:1}, {t:"没有特殊消耗，状态轻松", v:0}] }
+    ];
+
+    // 专业诊断和调理建议库
+    const adviceLevels = {
+        good: {
+            title: "健康优良 (低隐性饥饿风险)",
+            color: "#10b981",
+            bgColor: "#ecfdf5",
+            borderColor: "#a7f3d0",
+            advice: [
+                "🥦 <strong>食物多样化</strong>：请继续保持目前的膳食多样性，尽量保证每天摄入 12 种以上、每周 25 种以上的不同天然食物。",
+                "🍓 <strong>多吃新鲜蔬果</strong>：维持每天 300-500克蔬菜和 200-350克新鲜水果的摄入，补充高量维生素与膳食纤维。",
+                "🌾 <strong>持续关注健康</strong>：在身体经受高强度压力或面临特殊生理变化时，身体所需的微量营养素会有所提升，请继续保持高品质饮食习惯。"
+            ]
+        },
+        mild: {
+            title: "轻度隐性饥饿风险",
+            color: "#f59e0b",
+            bgColor: "#fffbeb",
+            borderColor: "#fde68a",
+            advice: [
+                "🍎 <strong>增加蔬果色泽</strong>：每天多吃 1-2 份新鲜水果或不同颜色的蔬菜（如西红柿、紫甘蓝），补充特定抗氧化物与水溶性维生素。",
+                "🍜 <strong>避免空热量食物</strong>：减少方便面、奶茶、高度加工甜品摄入。这些食物能量极高但几乎不含维生素和矿物质。",
+                "🌾 <strong>主食粗细兼顾</strong>：尝试将 1/3 的精制主食（白米、白面）换为粗糙五谷杂粮（糙米、燕麦、红豆等），提高膳食 B 族维生素含量。"
+            ]
+        },
+        moderate: {
+            title: "中度隐性饥饿 (建议及早干预)",
+            color: "#d97706",
+            bgColor: "#fff7ed",
+            borderColor: "#ffedd5",
+            advice: [
+                "🥩 <strong>重点补充铁与锌</strong>：您经常性的疲劳或抵抗力差等症状，常与微量营养素缺乏密切相关。建议适当增加红肉、海鲜贝类与动物肝脏摄入。",
+                "🥛 <strong>增加优质蛋白与钙质</strong>：保证每天至少摄入 300g 牛奶或高品质大豆豆奶。钙与维生素 D3 的协同可大幅强化骨骼与情绪的活力状态。",
+                "👨‍⚕️ <strong>补充膳食营养制剂</strong>：由于当前膳食摄入欠佳，可在专业药剂师或营养师指导下，每日针对性补充基础复合维生素片。"
+            ]
+        },
+        severe: {
+            title: "重度隐性饥饿 (高危红色预警)",
+            color: "#ef4444",
+            bgColor: "#fef2f2",
+            borderColor: "#fee2e2",
+            advice: [
+                "🏥 <strong>进行医院筛查</strong>：强烈建议及早前往医院进行微量营养素（如铁蛋白、叶酸、血钙、维生素 D3）及常规体格检测，避免诱发严重的骨折、贫血或慢性代谢疾病。",
+                "🚫 <strong>戒除不良饮食习惯</strong>：立刻终止用泡面、快餐高度充饥的粗暴生活习惯。必须以新鲜的鱼肉蛋奶、蔬菜水果取代深加工垃圾食品。",
+                "🥗 <strong>专业医学营养干预</strong>：在专业临床医生或临床营养师引导下开展营养重构工程，短期内可服用临床高剂量微量元素补充补充剂快速纠正赤字。"
+            ]
+        }
+    };
+
+    // 步骤追踪
+    let currentStep = 0; // 0: intro, 1: basic, 2: diet, 3: symptoms, 4: results
+
+    // 初始化渲染问卷
+    window.onload = function() {
+        renderQuestions();
+    };
+
+    // 动态渲染题目到各个页面
+    function renderQuestions() {
+        const dietContainer = document.getElementById('diet-questions-container');
+        const symptomsContainer = document.getElementById('symptoms-questions-container');
+        
+        let dietHtml = '';
+        let symptomsHtml = '';
+        
+        questions.forEach((item, index) => {
+            let questionHtml = `
+                <div class="question-card">
+                    <div class="question-header">
+                        <span class="question-number">Q${index + 1}</span>
+                        <p class="question-text">${item.q.replace(/^\d+\.\s*/, '')}</p>
+                    </div>
+                    <div class="options-grid">
+            `;
+            
+            item.options.forEach((opt) => {
+                questionHtml += `
+                    <label class="option-card">
+                        <input type="radio" name="q${index}" value="${opt.v}" required>
+                        <span class="radio-indicator"></span>
+                        <span class="option-text">${opt.t}</span>
+                    </label>
+                `;
+            });
+            
+            questionHtml += `
+                    </div>
+                </div>
+            `;
+            
+            if (index < 8) {
+                dietHtml += questionHtml;
+            } else {
+                symptomsHtml += questionHtml;
+            }
+        });
+        
+        dietContainer.innerHTML = dietHtml;
+        symptomsContainer.innerHTML = symptomsHtml;
+    }
+
+    // 视图步骤导航核心
+    function goToStep(step) {
+        // 关闭所有步骤的激活状态
+        document.querySelectorAll('.step-view').forEach(view => {
+            view.classList.remove('active');
+        });
+        
+        // 获取目标页面
+        let targetView;
+        if (step === 0) targetView = document.getElementById('step-intro-view');
+        else if (step === 1) targetView = document.getElementById('step-basic-view');
+        else if (step === 2) targetView = document.getElementById('step-diet-view');
+        else if (step === 3) targetView = document.getElementById('step-symptoms-view');
+        else if (step === 4) targetView = document.getElementById('step-results-view');
+        
+        if (targetView) {
+            targetView.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        currentStep = step;
+        updateProgressUI();
+    }
+
+    // 进度条与向导视觉刷新
+    function updateProgressUI() {
+        const progressBar = document.getElementById('survey-progress');
+        const stepsHeader = document.getElementById('steps-header-nav');
+        const progressContainer = document.getElementById('progress-bar-container');
+        
+        if (currentStep === 0 || currentStep === 4) {
+            progressContainer.style.display = 'none';
+            stepsHeader.style.display = 'none';
+        } else {
+            progressContainer.style.display = 'block';
+            stepsHeader.style.display = 'flex';
+            
+            let pct = 0;
+            if (currentStep === 1) pct = 15;
+            else if (currentStep === 2) pct = 55;
+            else if (currentStep === 3) pct = 90;
+            
+            progressBar.style.width = pct + '%';
+            
+            for (let i = 1; i <= 3; i++) {
+                const ind = document.getElementById('indicator-' + i);
+                ind.classList.remove('active', 'completed');
+                if (i === currentStep) {
+                    ind.classList.add('active');
+                } else if (i < currentStep) {
+                    ind.classList.add('completed');
+                }
+            }
+        }
+    }
+
+    // 实时计算 BMI & 仪表刻度定位
+    function calculateLiveBmi() {
+        const height = parseFloat(document.getElementById('height').value);
+        const weight = parseFloat(document.getElementById('weight').value);
+        const widget = document.getElementById('live-bmi-widget');
+        
+        if (!isNaN(height) && height >= 50 && height <= 250 &&
+            !isNaN(weight) && weight >= 10 && weight <= 300) {
+            
+            const heightInMeter = height / 100;
+            const bmiVal = (weight / (heightInMeter * heightInMeter)).toFixed(1);
+            
+            widget.style.display = 'block';
+            document.getElementById('bmi-val').innerText = bmiVal;
+            
+            updateBmiGaugeUI(parseFloat(bmiVal), 'bmi-pointer', 'bmi-status');
+        } else {
+            widget.style.display = 'none';
+        }
+    }
+
+    // 比例刻度计算器
+    function getBmiPercentage(bmi) {
+        if (bmi < 15) return 0;
+        if (bmi > 35) return 100;
+        
+        if (bmi < 18.5) {
+            return ((bmi - 15) / (18.5 - 15)) * 25;
+        } else if (bmi < 24.0) {
+            return 25 + ((bmi - 18.5) / (24.0 - 18.5)) * 25;
+        } else if (bmi < 28.0) {
+            return 50 + ((bmi - 24.0) / (28.0 - 24.0)) * 25;
+        } else {
+            return 75 + ((bmi - 28.0) / (35.0 - 28.0)) * 25;
+        }
+    }
+
+    // 渲染 BMI 在各个表盘中的表现
+    function updateBmiGaugeUI(bmi, pointerId, statusId) {
+        const pointer = document.getElementById(pointerId);
+        const statusEl = document.getElementById(statusId);
+        
+        const pct = getBmiPercentage(bmi);
+        pointer.style.left = pct + '%';
+        
+        let statusText = '';
+        let statusClass = '';
+        
+        if (bmi < 18.5) {
+            statusText = '偏瘦';
+            statusClass = 'status-underweight';
+        } else if (bmi < 24.0) {
+            statusText = '正常';
+            statusClass = 'status-normal';
+        } else if (bmi < 28.0) {
+            statusText = '超重';
+            statusClass = 'status-overweight';
+        } else {
+            statusText = '肥胖';
+            statusClass = 'status-obese';
+        }
+        
+        statusEl.innerText = statusText;
+        statusEl.className = 'badge ' + statusClass;
+    }
+
+    // 校验步骤一（基础数据）
+    function validateStep1() {
+        const name = document.getElementById('name').value.trim();
+        const genderChecked = document.querySelector('input[name="gender"]:checked');
+        const phone = document.getElementById('phone').value.trim();
+        const height = parseFloat(document.getElementById('height').value);
+        const weight = parseFloat(document.getElementById('weight').value);
+        
+        if (!name) {
+            alert('请填写姓名');
+            document.getElementById('name').focus();
+            return;
+        }
+        if (!genderChecked) {
+            alert('请选择性别');
+            return;
+        }
+        if (phone && phone.length < 5) {
+            alert('请输入有效的联系电话，或保持为空（选填）');
+            document.getElementById('phone').focus();
+            return;
+        }
+        if (isNaN(height) || height < 50 || height > 250) {
+            alert('请输入有效身高（50 - 250 cm）');
+            document.getElementById('height').focus();
+            return;
+        }
+        if (isNaN(weight) || weight < 10 || weight > 300) {
+            alert('请输入有效体重（10 - 300 kg）');
+            document.getElementById('weight').focus();
+            return;
+        }
+        
+        goToStep(2);
+    }
+
+    // 校验步骤二（Q1 - Q8 答题）
+    function validateDietStep() {
+        let unansweredIndex = -1;
+        for (let i = 0; i < 8; i++) {
+            const checkedOption = document.querySelector(`input[name="q${i}"]:checked`);
+            if (!checkedOption) {
+                unansweredIndex = i;
+                break;
+            }
+        }
+        
+        if (unansweredIndex !== -1) {
+            alert(`第 ${unansweredIndex + 1} 题尚未回答，请解答该题目。`);
+            const questionCards = document.querySelectorAll('#diet-questions-container .question-card');
+            questionCards[unansweredIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            questionCards[unansweredIndex].classList.add('highlight-error');
+            setTimeout(() => {
+                questionCards[unansweredIndex].classList.remove('highlight-error');
+            }, 1200);
+            return;
+        }
+        
+        goToStep(3);
+    }
+
+    // 校验步骤三并触发提交 (Q9 - Q20 答题)
+    function submitSurvey() {
+        let unansweredIndex = -1;
+        for (let i = 8; i < 20; i++) {
+            const checkedOption = document.querySelector(`input[name="q${i}"]:checked`);
+            if (!checkedOption) {
+                unansweredIndex = i;
+                break;
+            }
+        }
+        
+        if (unansweredIndex !== -1) {
+            alert(`第 ${unansweredIndex + 1} 题尚未回答，请解答该题目。`);
+            const questionCards = document.querySelectorAll('#symptoms-questions-container .question-card');
+            const relativeIndex = unansweredIndex - 8;
+            questionCards[relativeIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            questionCards[relativeIndex].classList.add('highlight-error');
+            setTimeout(() => {
+                questionCards[relativeIndex].classList.remove('highlight-error');
+            }, 1200);
+            return;
+        }
+        
+        executeDataUpload();
+    }
+
+    // 核心提交与云端计算逻辑
+    function executeDataUpload() {
+        // 打开全局遮罩
+        const overlay = document.getElementById('loading-overlay');
+        overlay.classList.add('active');
+        
+        // 抓取并组装数据
+        const name = document.getElementById('name').value.trim();
+        const gender = document.querySelector('input[name="gender"]:checked').value;
+        const phone = document.getElementById('phone').value.trim();
+        const height = parseFloat(document.getElementById('height').value);
+        const weight = parseFloat(document.getElementById('weight').value);
+        
+        const heightInMeters = height / 100;
+        const bmi = (weight / (heightInMeters * heightInMeters)).toFixed(1);
+        
+        let totalScore = 0;
+        const answers = {};
+        for (let i = 0; i < 20; i++) {
+            const val = parseInt(document.querySelector(`input[name="q${i}"]:checked`).value);
+            totalScore += val;
+            answers[`q${i}`] = val;
+        }
+        
+        // 解析评分区间与建议
+        let levelKey = "good";
+        if (totalScore <= 20) levelKey = "good";
+        else if (totalScore <= 50) levelKey = "mild";
+        else if (totalScore <= 80) levelKey = "moderate";
+        else levelKey = "severe";
+        
+        const levelData = adviceLevels[levelKey];
+        
+        // 组装表单数据
+        const requestData = new URLSearchParams();
+        requestData.append('name', name);
+        requestData.append('gender', gender);
+        requestData.append('phone', phone);
+        requestData.append('height', height);
+        requestData.append('weight', weight);
+        requestData.append('bmi', bmi);
+        requestData.append('score', totalScore);
+        requestData.append('level', levelData.title);
+        
+        for (let i = 0; i < 20; i++) {
+            requestData.append(`q${i}`, answers[`q${i}`]);
+        }
+        
+        // 逻辑性异步发送
+        if (scriptURL && scriptURL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' && scriptURL.trim() !== '') {
+            fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: requestData.toString()
+            })
+            .then(() => {
+                overlay.classList.remove('active');
+                renderResultsScreen(name, bmi, totalScore, levelKey, 'success');
+            })
+            .catch((err) => {
+                console.error('提交到 Google Sheets 出错:', err);
+                overlay.classList.remove('active');
+                renderResultsScreen(name, bmi, totalScore, levelKey, 'error');
+            });
+        } else {
+            // Web App URL 未配置的兜底逻辑
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                renderResultsScreen(name, bmi, totalScore, levelKey, 'unconfigured');
+            }, 800);
+        }
+    }
+
+    // 渲染评估结果页面与分数动效
+    function renderResultsScreen(name, bmi, score, levelKey, syncStatus) {
+        goToStep(4);
+        
+        document.getElementById('res-name').innerText = name;
+        document.getElementById('res-bmi').innerText = bmi;
+        
+        // 更新结果页 BMI 指示器
+        updateBmiGaugeUI(parseFloat(bmi), 'res-bmi-pointer', 'res-bmi-status');
+        
+        // 同步状态条渲染
+        document.getElementById('sync-banner-success').style.display = 'none';
+        document.getElementById('sync-banner-unconfigured').style.display = 'none';
+        document.getElementById('sync-banner-error').style.display = 'none';
+        
+        if (syncStatus === 'success') {
+            document.getElementById('sync-banner-success').style.display = 'flex';
+        } else if (syncStatus === 'error') {
+            document.getElementById('sync-banner-error').style.display = 'flex';
+        } else if (syncStatus === 'unconfigured') {
+            document.getElementById('sync-banner-unconfigured').style.display = 'flex';
+        }
+        
+        // 获取与呈现调优诊断
+        const diagnostic = adviceLevels[levelKey];
+        const levelEl = document.getElementById('res-level');
+        levelEl.innerText = diagnostic.title;
+        levelEl.style.color = diagnostic.color;
+        
+        const adviceBox = document.getElementById('res-advice-box');
+        adviceBox.style.backgroundColor = diagnostic.bgColor;
+        adviceBox.style.borderColor = diagnostic.borderColor;
+        
+        let adviceHtml = `
+            <div class="advice-header">
+                <h3 class="status-title" style="color: ${diagnostic.color}">${diagnostic.title}</h3>
+            </div>
+            <ul class="advice-list">
+        `;
+        diagnostic.advice.forEach(item => {
+            adviceHtml += `<li>${item}</li>`;
+        });
+        adviceHtml += '</ul>';
+        adviceBox.innerHTML = adviceHtml;
+        
+        // 渲染环形分数动效
+        triggerScoreAnimate(score, diagnostic.color);
+    }
+
+    // 绘制环形分数与数字递增特效
+    const circle = document.querySelector('.progress-ring__circle');
+    const ringRadius = circle.r.baseVal.value;
+    const circumference = ringRadius * 2 * Math.PI;
+
+    circle.style.strokeDasharray = `${circumference} ${circumference}`;
+    circle.style.strokeDashoffset = `${circumference}`;
+
+    function setCircleOffset(percent) {
+        const offset = circumference - (percent / 100) * circumference;
+        circle.style.strokeDashoffset = offset;
+    }
+
+    function triggerScoreAnimate(targetScore, color) {
+        const scoreNumberEl = document.getElementById('res-score');
+        
+        circle.style.stroke = color;
+        // 环形动画
+        setCircleOffset(targetScore);
+        
+        // 数字跳动动画
+        let currentNum = 0;
+        const totalDuration = 1000; // 1000 毫秒完成
+        const stepInterval = Math.max(1, Math.floor(totalDuration / (targetScore || 1)));
+        
+        const incrementTimer = setInterval(() => {
+            if (targetScore === 0) {
+                scoreNumberEl.innerText = '0';
+                clearInterval(incrementTimer);
+                return;
+            }
+            currentNum++;
+            scoreNumberEl.innerText = currentNum;
+            if (currentNum >= targetScore) {
+                scoreNumberEl.innerText = targetScore;
+                clearInterval(incrementTimer);
+            }
+        }, stepInterval);
+    }
+</script>
+
+</body>
+</html>
