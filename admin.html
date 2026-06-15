@@ -1159,7 +1159,7 @@
     function renderAll() {
         // 1. 核心 KPI 数据分析
         const total = database.length;
-        const phoneLeads = database.filter(item => item.phone && item.phone.trim().length > 3);
+        const phoneLeads = database.filter(item => item.phone && String(item.phone).trim().length > 3);
         const phoneCount = phoneLeads.length;
         const conversion = total > 0 ? ((phoneCount / total) * 100).toFixed(1) + '%' : '0.0%';
         
@@ -1374,7 +1374,7 @@
             }
 
             // 对话模板组装
-            const hasPhone = item.phone && item.phone.trim().length > 3;
+            const hasPhone = item.phone && String(item.phone).trim().length > 3;
             const waButton = hasPhone 
                 ? `<button class="action-btn whatsapp" onclick="startWhatsAppFollowup(${index})">📱 WhatsApp</button>` 
                 : `<button class="action-btn whatsapp disabled" title="客户未填写电话">🚫 无电话</button>`;
@@ -1411,7 +1411,7 @@
 
         const filtered = database.filter(item => {
             // 搜索关键字匹配姓名或电话
-            const matchQuery = item.name.toLowerCase().includes(query) || (item.phone && item.phone.includes(query));
+            const matchQuery = item.name.toLowerCase().includes(query) || (item.phone && String(item.phone).includes(query));
             
             // 匹配风险等级
             let matchLevel = true;
@@ -1426,7 +1426,7 @@
             // 匹配手机留电状态
             let matchPhone = true;
             if (filterPhone) {
-                const hasPhone = item.phone && item.phone.trim().length > 3;
+                const hasPhone = item.phone && String(item.phone).trim().length > 3;
                 matchPhone = (filterPhone === 'has_phone') ? hasPhone : !hasPhone;
             }
 
@@ -1438,7 +1438,8 @@
 
     // 格式化马来西亚等国家电话前缀以适配 WhatsApp 
     function formatPhoneNumber(phone) {
-        let clean = phone.replace(/[^\d]/g, '');
+        const phoneStr = String(phone);
+        let clean = phoneStr.replace(/[^\d]/g, '');
         if (clean.startsWith('0')) {
             clean = '6' + clean; // 自动转换为大马 60 前缀
         }
